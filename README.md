@@ -25,6 +25,23 @@ The extension manages the screen size within the specified aspect ratio constrai
 ```gml
 NOGX_get_canvas_width();
 NOGX_get_canvas_height();
+NOGX_get_pixel_ratio();
+```
+Th last function will help you to fix incorrect `device_mouse_x_to_gui` and `device_mouse_y_to_gui` values on **HTML5 target**.  
+Example:
+```gml
+// DRAW GUI EVENT
+// draw touch points
+for(var i=0; i<10; i++)
+{
+	var scl = NOGX_get_pixel_ratio(); // fix for HTML5 target
+	draw_set_color(c_lime);
+	if(device_mouse_check_button(i, mb_left)) {
+		var px = device_mouse_x_to_gui(i) * scl;
+		var py = device_mouse_y_to_gui(i) * scl;
+		draw_circle(px, py, 16, false);
+	}
+}
 ```
 
 ## How to use

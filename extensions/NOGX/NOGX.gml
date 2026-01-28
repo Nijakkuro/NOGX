@@ -150,3 +150,6 @@ return global.__NOGX_canvas_w!=-1 ? global.__NOGX_canvas_w : window_get_width();
 #define NOGX_get_canvas_height
 return global.__NOGX_canvas_h!=-1 ? global.__NOGX_canvas_h : window_get_height();
 
+
+#define NOGX_get_pixel_ratio
+return os_browser!=browser_not_a_browser ? _NOGX_get_device_pixel_ratio_html5() : 1;

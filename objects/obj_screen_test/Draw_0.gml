@@ -18,6 +18,9 @@ var gh = display_get_gui_height();
 var cw = NOGX_get_canvas_width();
 var ch = NOGX_get_canvas_height();
 
+// pixel ratio
+var pr = NOGX_get_pixel_ratio();
+
 draw_sprite_stretched(spr_screen_test, 0, 0, 0, cw, ch);
 
 draw_set_color(c_white);
@@ -28,6 +31,7 @@ draw_text(16, 76, $"Display Size = {dw} x {dh}");
 draw_text(16, 96, $"Surface Size = {sw} x {sh}");
 draw_text(16, 116, $"GUI Size = {gw} x {gh}");
 draw_text(16, 136, $"Canvas Size = {cw} x {ch}");
+draw_text(16, 156, $"Pixel Ratio = {pr}");
 
-draw_text(16, 166, $"Use the NOGX_get_canvas_width() and NOGX_get_canvas_height() functions\nto get the actual canvas size in pixels");
+draw_text(16, 186, $"Use the NOGX_get_canvas_width() and NOGX_get_canvas_height() functions\nto get the actual canvas size in pixels");
 
