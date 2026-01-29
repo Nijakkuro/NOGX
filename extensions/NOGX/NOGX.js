@@ -1,3 +1,35 @@
+// A special "hack" for registering the GML_send_async_event_social callback. Used for YYC compiled project.
+// triggerPayment is executed when gxc_payment is called in NOGX.gml.
+function triggerPayment(itemId, _callback_PaymentComplete) {
+	if(itemId==="#GMS_API_async_event_social") {
+		var pRValueCopy = triggerPaymentPrefix(_callback_PaymentComplete);
+		triggerPaymentPostfix();
+		GMS_API.__GML_send_async_event_social_ADDR = pRValueCopy;
+	}
+}
+
+// GMS_API available in HTML5 export but for GX(WASM).
+// Required to call the GMS_API.send_async_event_social
+GMS_API = {
+	__GML_send_async_event_social_ADDR: undefined,
+	
+	send_async_event_social: function(map) {
+		// for YYC
+		if(this.__GML_send_async_event_social_ADDR!==undefined) {
+			doGMLCallback(this.__GML_send_async_event_social_ADDR, map);
+			return;
+		}
+		
+		// for VM
+		const GML = __js_get_gml();
+		const gmMap = GML.ds_map_create();
+		Object.keys(map).forEach(key => {
+			GML.ds_map_add(undefined, undefined, gmMap, key, map[key]);
+		});
+		GML.event_perform_async(undefined, undefined, 70, gmMap);
+	}
+}
+
 if (typeof __NOGX_ready === 'undefined') __NOGX_ready = false;
 __NOGX_canvasSizeW = 640;
 __NOGX_canvasSizeH = 360;

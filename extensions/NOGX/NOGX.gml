@@ -133,6 +133,22 @@ time_source_start(ts);
 global.__NOGX_canvas_size_update_ticker = ts;
 
 if(os_type==os_gxgames) {
+	if(code_is_compiled()) {
+		// An alternative way to call ev_async_social from JS. Used for YYC.
+		global.__NOGX_async_social_event_map = undefined;
+		var GML_send_async_event_social = function(result) {
+			global.__NOGX_async_social_event_map = ds_map_create();
+			
+			struct_foreach(result, function(name, value) {
+				global.__NOGX_async_social_event_map[? name] = value;
+			});
+			
+			event_perform_async(ev_async_social, global.__NOGX_async_social_event_map);
+			global.__NOGX_async_social_event_map = undefined;
+		}
+		gxc_payment("#GMS_API_async_event_social", GML_send_async_event_social); // register callback
+	}
+	
 	_NOGX_init_in_js(limit_asp_ratio, min_asp, max_asp);
 }
 
@@ -142,6 +158,7 @@ if(global.__NOGX_canvas_size_update_ticker !=undefined) {
 	time_source_destroy(global.__NOGX_canvas_size_update_ticker);
 	global.__NOGX_canvas_size_update_ticker = undefined;
 }
+
 
 #define NOGX_get_canvas_width
 return global.__NOGX_canvas_w!=-1 ? global.__NOGX_canvas_w : window_get_width(); 
