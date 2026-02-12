@@ -14,14 +14,14 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.0.0",
+  "extensionVersion":"1.0.1",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"post_run_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"post_run_step.ps1","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"post_package_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"post_package_step.ps1","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
-    {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":3035426178912485614,"filename":"NOGX.gml","final":"_NOGX_free","functions":[
+    {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":3035426178912485614,"filename":"NOGX.gml","final":"","functions":[
         {"$GMExtensionFunction":"","%Name":"_NOGX_init","argCount":0,"args":[],"documentation":"","externalName":"_NOGX_init","help":"_NOGX_init","hidden":true,"kind":2,"name":"_NOGX_init","resourceType":"GMExtensionFunction","resourceVersion":"2.0","returnType":1,},
         {"$GMExtensionFunction":"","%Name":"_NOGX_free","argCount":0,"args":[],"documentation":"","externalName":"_NOGX_free","help":"_NOGX_free","hidden":true,"kind":2,"name":"_NOGX_free","resourceType":"GMExtensionFunction","resourceVersion":"2.0","returnType":2,},
         {"$GMExtensionFunction":"","%Name":"NOGX_get_canvas_width","argCount":0,"args":[],"documentation":"","externalName":"NOGX_get_canvas_width","help":"NOGX_get_canvas_width()","hidden":false,"kind":2,"name":"NOGX_get_canvas_width","resourceType":"GMExtensionFunction","resourceVersion":"2.0","returnType":2,},
