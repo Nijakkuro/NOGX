@@ -23,6 +23,11 @@ The interface is identical to the one in **HTML5**, namely:
 ### 4. Screen size control (works in other targets, not just GX)
 The extension manages the screen size within the specified aspect ratio constraints and also prevents image blur, even in an HTML5 target.
 
+### 5. HTML-Injections (works only on GX)
+The extension implements HTML code injection independently, ignoring Game Maker's implementation! Most injectors described in the [Game Maker manual page](https://manual.gamemaker.io/beta/en/The_Asset_Editors/Extension_Creation/HTML5_Extensions.htm) are supported.
+
+> Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
+
 ## Extension Options
 ![extension options](image_00.png)
 
