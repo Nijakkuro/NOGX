@@ -2,21 +2,22 @@ $YYPLATFORM_name = $env:YYPLATFORM_name
 $YYtargetFile = $env:YYtargetFile
 $YYprojectName = $env:YYprojectName
 $YYTARGET_runtime = $env:YYTARGET_runtime
+$YYtempFolder = $env:YYtempFolder
 
 $YYEXTOPT_NOGX_Enable = $env:YYEXTOPT_NOGX_Enable
 $YYEXTOPT_NOGX_YaFix = $env:YYEXTOPT_NOGX_YaFix
 
-Write-Host "NOGX extension post_package_step"
+Write-Host "[NOGX] post_package_step"
 
 if ($YYEXTOPT_NOGX_Enable -ne "True") {
-	Write-Host "The extension is disabled."
+	Write-Host "[NOGX] The extension is disabled."
 	exit 0
 }
 
-Write-Host "Current platform: $YYPLATFORM_name"
+Write-Host "[NOGX] Current platform: $YYPLATFORM_name"
 
 if ($YYPLATFORM_name -ine "Opera GX" -and $YYPLATFORM_name -ine "operagx") {
-	Write-Host "Aborting: This script is only for Opera GX platform."
+	Write-Host "[NOGX] Aborting: This script is only for Opera GX platform."
 	exit 0
 }
 
@@ -24,13 +25,13 @@ $webfilesDir = [System.IO.Path]::Combine($PSScriptRoot, "..", "..", "webfiles")
 $webfilesDir = [System.IO.Path]::GetFullPath($webfilesDir)
 $defaultIndexFile = [System.IO.Path]::Combine($PSScriptRoot, "index.html")
 
-Write-Host "Project name: $YYprojectName"
-Write-Host "Target runtime: $YYTARGET_runtime"
-Write-Host "Target file: $YYtargetFile"
-Write-Host "Webfiles dir: $webfilesDir"
+Write-Host "[NOGX] Project name: $YYprojectName"
+Write-Host "[NOGX] Target runtime: $YYTARGET_runtime"
+Write-Host "[NOGX] Target file: $YYtargetFile"
+Write-Host "[NOGX] Webfiles dir: $webfilesDir"
 
 if (!(Test-Path $YYtargetFile)) {
-	Write-Host "Aborting: Target file not found."
+	Write-Host "[NOGX] Aborting: Target file not found."
 	exit 1
 }
 
@@ -47,7 +48,7 @@ function RemoveFile-Zip {
 		[string]$FileName
 	)
 	
-	Write-Host "Remove '$FileName'"
+	Write-Host "[NOGX] Remove '$FileName'"
 	$entry = $Zip.GetEntry($FileName)
 	if ($entry -ne $null) {
 		$entry.Delete()
@@ -67,7 +68,7 @@ function RenameFile-Zip {
 		[string]$NewName
 	)
 	
-	Write-Host "Rename '$OldName' -> '$NewName'"
+	Write-Host "[NOGX] Rename '$OldName' -> '$NewName'"
 	$entry = $Zip.GetEntry($OldName)
 	if ($entry -ne $null) {
 		$stream = $entry.Open()
@@ -86,7 +87,7 @@ function RenameFile-Zip {
 	}
 }
 
-Write-Host "Repacking target file..."
+Write-Host "[NOGX] Repackaging target file..."
 $zip = [System.IO.Compression.ZipFile]::Open($YYtargetFile, 'Update')
 
 # delete extra files
@@ -104,13 +105,13 @@ elseif ($YYTARGET_runtime -ieq "VM") {
 	RemoveFile-Zip -Zip $zip -FileName "runner.json"
 }
 else {
-	Write-Error "Unknown runtime target '$YYTARGET_runtime'."
+	Write-Error "[NOGX] Unknown runtime target '$YYTARGET_runtime'."
 	exit 1
 }
 
 # fix "Ya" conflict
 if ($YYEXTOPT_NOGX_YaFix -eq "True") {
-	Write-Host "Fixing Ya variable conflict."
+	Write-Host "[NOGX] Fixing Ya variable conflict."
 	$entryPath = "runner.js"
 	$entry = $zip.GetEntry($entryPath)
 	if ($entry -ne $null) {
@@ -144,7 +145,7 @@ if ($YYEXTOPT_NOGX_YaFix -eq "True") {
 			[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $tempFile, (Split-Path $entryPath -Leaf)) | Out-Null
 		}
 		catch {
-			Write-Error "Repacking failed!"
+			Write-Error "[NOGX] Repackaging failed!"
 			exit 1
 		}
 		finally {
@@ -155,7 +156,7 @@ if ($YYEXTOPT_NOGX_YaFix -eq "True") {
 
 # add files from 'webfiles' folder
 if (Test-Path $webfilesDir) {
-	Write-Host "Add 'webfiles' folder content."
+	Write-Host "[NOGX] Add 'webfiles' folder content."
 	Push-Location -Path $webfilesDir
 	try {
 		$files = Get-ChildItem -Recurse -File
@@ -172,26 +173,28 @@ if (Test-Path $webfilesDir) {
 		}
 	}
 	catch {
-		Write-Error "Repacking failed!"
+		Write-Error "[NOGX] Repackaging failed!"
 		exit 1
 	}
 	finally {
 		Pop-Location
 	}
 } else {
-	Write-Host "'webfiles' folder does not exist."
+	Write-Host "[NOGX] 'webfiles' folder does not exist."
 }
 
-# add 'index.html' from extension folder if it was not in 'webfiles' folder
-$indexEntry = $zip.GetEntry("index.html")
-if ($indexEntry -eq $null) {
-	Write-Host "Add 'index.html' from extension folder."
-	[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $defaultIndexFile, "index.html") | Out-Null
+# add prepared 'index.html'
+$sourceFile = [System.IO.Path]::Combine($YYtempFolder, "NOGX_index.html")
+if (!(Test-Path $sourceFile)) {
+	Write-Host "[NOGX] '$sourceFile' does not exist."
+	exit 1
 }
+RemoveFile-Zip -Zip $zip -FileName "index.html"
+[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $sourceFile, "index.html") | Out-Null
 
 $zip.Dispose()
 
-Write-Host "Repacking complete!"
+Write-Host "[NOGX] Repackaging complete!"
 
 exit 0
 

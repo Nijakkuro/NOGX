@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+  <!-- Custom PreHead code is injected here -->
+  ${GM_HTML5_PreHead}
 <head>
   <meta charset="UTF-8" />
   <meta name ="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Game</title>
+  <title>${GM_HTML5_BrowserTitle}</title>
+  <!-- Custom PreStyle code is injected here -->
+  ${GM_HTML5_PreStyle}
   <style>
     html {
       height: 100%
@@ -43,7 +47,13 @@
       box-shadow: 0px 0px 4em rgba(0, 0, 0, 0.5);
     }
   </style>
+  <!-- Custom PostStyle code is injected here -->
+  ${GM_HTML5_PostStyle}
 </head>
+<!-- Custom PostHead code is injected here -->
+${GM_HTML5_PostHead}
+<!-- Custom PreBody code is injected here -->
+${GM_HTML5_PreBody}
 <body>
   <canvas id="canvas" width="640" height="360" tabindex="-1" style="position: absolute; top: 50%; left: 50%; bottom: -50%; right: -50%; transform: translate(-50%, -50%);">
   <div id="status">...</div>
@@ -122,4 +132,6 @@
   </script>
   <script async src="runner.js"></script>
 </body>
+<!-- Custom PostBody code is injected here -->
+${GM_HTML5_PostBody}
 </html>
