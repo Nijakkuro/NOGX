@@ -14,7 +14,7 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.1.0",
+  "extensionVersion":"1.1.1",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"pre_build_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
