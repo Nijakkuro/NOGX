@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <!-- Custom PreHead code is injected here -->
   ${GM_HTML5_PreHead}
@@ -46,6 +46,20 @@
       border: 0px;
       box-shadow: 0px 0px 4em rgba(0, 0, 0, 0.5);
     }
+    .progress-bar {
+      width: 256px;
+      height: 24px;
+      background: linear-gradient(
+        to right,
+        #a3e3ff 0%,
+        #ffffff var(--progress),
+        #23395c var(--progress),
+        #23395c 100%
+      );
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
   </style>
   <!-- Custom PostStyle code is injected here -->
   ${GM_HTML5_PostStyle}
@@ -56,24 +70,36 @@ ${GM_HTML5_PostHead}
 ${GM_HTML5_PreBody}
 <body>
   <canvas id="canvas" width="640" height="360" tabindex="-1" style="position: absolute; top: 50%; left: 50%; bottom: -50%; right: -50%; transform: translate(-50%, -50%);">
-  <div id="status">...</div>
+  </canvas>
+  <div id="status">0%</div>
+  <div class="progress-bar" id="loadingProgress"></div>
 
   <script>
     var Module = {
       canvas: document.getElementById("canvas"),
+      show: function() {
+        Module.canvas.style.display = "block";
+        document.getElementById("status").style.display = "none";
+        document.getElementById("loadingProgress").style.display = "none";
+      },
       setStatus: function(text) {
-        document.getElementById("status").textContent = text || "";
-        if (!text) {
-          document.getElementById("canvas").style.display = "block";
-          document.getElementById("status").style.display = "none";
+        if(text==="Running..." || text=="") {
+          return;
         }
+        document.getElementById("status").textContent = text || "";
       },
       totalDependencies: 0,
       monitorRunDependencies: function(left) {
         this.totalDependencies = Math.max(this.totalDependencies, left);
-        Module.setStatus(left ? "(" + (this.totalDependencies - left) + "/" + this.totalDependencies + ")" : "");
+        const progressMax = Math.max(this.totalDependencies, 1);
+        const progressValue = progressMax - left;
+        const progress = Math.floor( progressValue / progressMax * 100 ) + "%";
+        const progressElem = document.getElementById("loadingProgress");
+        progressElem.style.setProperty("--progress", progress);
+        this.setStatus(progress);
       }
     };
+    Module.canvas.style.display = "none";
 
     // functions for runner.js
     var g_pWadLoadCallback = undefined;
@@ -105,6 +131,7 @@ ${GM_HTML5_PreBody}
 
     function onFirstFrameRendered() {
       console.log("-------------First frame rendered!-----------");
+      Module.show();
     }
 
     function onGameSetWindowSize(width, height) {}
@@ -124,8 +151,7 @@ ${GM_HTML5_PreBody}
     });
 
     document.addEventListener('touchstart', (event) => {
-      const canvasElem = document.getElementById('canvas');
-      if(event.target===document.body || event.target===canvasElem) {
+      if(event.target===document.body || event.target===Module.canvas) {
         event.preventDefault();
       }
     }, { passive: false });
