@@ -8,6 +8,21 @@ function triggerPayment(itemId, _callback_PaymentComplete) {
 	}
 }
 
+// Allow keyboard input when game elements are inactive
+window.addEventListener('keydown', e => {
+	if(document.activeElement!==document.body
+	&& document.activeElement!==Module.canvas) {
+		e.stopImmediatePropagation();
+	}
+}, true);
+
+window.addEventListener('keyup', e => {
+	if(document.activeElement!==document.body
+	&& document.activeElement!==Module.canvas) {
+		e.stopImmediatePropagation();
+	}
+}, true);
+
 // GMS_API available in HTML5 export but for GX(WASM).
 // Required to call the GMS_API.send_async_event_social
 var GMS_API = {
