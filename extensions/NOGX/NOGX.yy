@@ -14,7 +14,7 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.1.1",
+  "extensionVersion":"1.1.2",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"pre_build_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
@@ -63,7 +63,8 @@
   "name":"NOGX",
   "options":[
     {"$GMExtensionOption":"","%Name":"Enable","defaultValue":"True","description":"Enable Extension","displayName":"","exportToINI":false,"extensionId":null,"guid":"5e375f4a-408d-4a8f-a3ee-505cea17279e","hidden":false,"listItems":[],"name":"Enable","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"YaFix","defaultValue":"False","description":"Adds changes to resolve a JavaScript variable conflicts on some web platforms.","displayName":"","exportToINI":false,"extensionId":null,"guid":"a9ba5dbf-b0fa-4ba1-adad-c74e23460d27","hidden":true,"listItems":[],"name":"YaFix","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"__extOptLabel1","defaultValue":"GX Export Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"99226052-fddb-44f3-8a90-99fa831ff7e4","hidden":false,"listItems":[],"name":"__extOptLabel1","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"YaFix","defaultValue":"False","description":"Adds changes to resolve a JavaScript variable conflicts on some web platforms.","displayName":"","exportToINI":false,"extensionId":null,"guid":"a9ba5dbf-b0fa-4ba1-adad-c74e23460d27","hidden":false,"listItems":[],"name":"YaFix","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"__extOptLabel","defaultValue":"Display Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"ba7bcfc3-fd11-48f0-9039-b2a1b9fe559d","hidden":false,"listItems":[],"name":"__extOptLabel","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"LimitAspectRatio","defaultValue":"True","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"e7dc1f70-0efc-46ad-a73f-dc6a33bad046","hidden":false,"listItems":[],"name":"LimitAspectRatio","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"AspectRatioRangeStart","defaultValue":"4:3","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"cdd374b8-4004-4586-89ca-e113af8d80f2","hidden":false,"listItems":[
