@@ -9,6 +9,7 @@ $YYTARGET_runtime = $env:YYTARGET_runtime
 $YYtempFolder = $env:YYtempFolder
 $YYEXTOPT_NOGX_Enable = $env:YYEXTOPT_NOGX_Enable
 $YYEXTOPT_NOGX_YaFix = $env:YYEXTOPT_NOGX_YaFix
+$YYEXTOPT_NOGX_ReplaceAlertOnError = $env:YYEXTOPT_NOGX_ReplaceAlertOnError
 
 Write-Host "[NOGX] post_package_step"
 
@@ -173,9 +174,9 @@ try {
 		exit 1
 	}
 
-	# Step 4: Fix "Ya" variable conflict if enabled
-	if ($YYEXTOPT_NOGX_YaFix -eq "True") {
-		Write-Host "[NOGX] Fixing Ya variable conflict."
+	# Step 4: Patch runner.js
+	if ($YYEXTOPT_NOGX_YaFix -eq "True" -or $YYEXTOPT_NOGX_ReplaceAlertOnError -eq "True") {
+		Write-Host "[NOGX] Patching 'runner.js'"
 		$entryPath = "runner.js"
 		$entry = $zip.GetEntry($entryPath)
 		
@@ -190,20 +191,37 @@ try {
 			$stream.Dispose()
 			$entry.Delete()
 			
-			# Apply replacements to fix Ya variable conflict:
-			# 1. Replace "Ya" -> "Yv" globally
-			# 2. Replace WebAssembly.instantiate(d,b) with wrapper that sets Ya=Yv
-			# 3. Replace WebAssembly.instantiateStreaming patterns with wrappers
-			$updatedContent = $content.Replace("Ya", "Yv").Replace(
-					"WebAssembly.instantiate(d,b)",
-					"{b.a.Ya=b.a.Yv;return WebAssembly.instantiate(d,b);}"
-				).Replace(
-					'(d=>WebAssembly.instantiateStreaming(d,a).then(b,function(e){l(`wasm streaming compile failed: `);l("falling back to ArrayBuffer instantiation");return Lb(c,a,b)}))',
-					'(d=>{a.a.Ya=a.a.Yv;return WebAssembly.instantiateStreaming(d,a).then(b,function(e){l(`wasm streaming compile failed: `);l("falling back to ArrayBuffer instantiation");return Lb(c,a,b)})})'
-				).Replace(
-					'(d=>WebAssembly.instantiateStreaming(d,a).then(b,function(e){l(`wasm streaming compile failed: `);l("falling back to ArrayBuffer instantiation");return Mb(c,a,b)}))',
-					'(d=>{a.a.Ya=a.a.Yv;return WebAssembly.instantiateStreaming(d,a).then(b,function(e){l(`wasm streaming compile failed: `);l("falling back to ArrayBuffer instantiation");return Mb(c,a,b)})})'
-				)
+			$updatedContent = $content
+			
+			# Fix "Ya" variable conflict if enabled
+			if ($YYEXTOPT_NOGX_YaFix -eq "True") {
+				Write-Host "[NOGX] Apply 'YaFix'"
+				# Apply replacements to fix Ya variable conflict:
+				# 1. Replace "Ya" -> "Yv" globally
+				# 2. Replace WebAssembly.instantiate(d,b) with wrapper that sets Ya=Yv
+				# 3. Replace WebAssembly.instantiateStreaming patterns with wrappers
+				
+				$updatedContent = $updatedContent -creplace '(?<![a-zA-Z0-9_])Ya(?![a-zA-Z0-9_])', 'Yv'
+				
+				$updatedContent = $updatedContent.Replace(
+						'WebAssembly.instantiate(d,b)',
+						'WebAssembly.instantiate(d,(b.a.Ya=b.a.Yv,b))'
+					)
+				$updatedContent = $updatedContent.Replace(
+						'WebAssembly.instantiateStreaming(d,a)',
+						'WebAssembly.instantiateStreaming(d,(a.a.Ya=a.a.Yv,a))'
+					)
+			}
+			
+			# Replace "alert" -> "console.error" in window.onerror
+			if ($YYEXTOPT_NOGX_ReplaceAlertOnError -eq "True") {
+				Write-Host "[NOGX] Apply 'ReplaceAlertOnError'"
+				
+				$updatedContent = $updatedContent.Replace(
+						'alert("Error occured: "+a)',
+						'console.error("Error occured: "+a)'
+					)
+			}
 			
 			# Write updated content to temporary file and add to ZIP
 			$tempFile = [System.IO.Path]::GetTempFileName()
@@ -212,7 +230,7 @@ try {
 				[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $tempFile, (Split-Path $entryPath -Leaf)) | Out-Null
 			}
 			catch {
-				Write-Error "[NOGX] ERROR: Failed to update runner.js with Ya fix: $_"
+				Write-Error "[NOGX] ERROR: Failed to patch runner.js: $_"
 				throw
 			}
 			finally {
@@ -222,7 +240,7 @@ try {
 			}
 		}
 		else {
-			Write-Warning "[NOGX] runner.js not found in ZIP archive. Skipping Ya fix."
+			Write-Warning "[NOGX] runner.js not found in ZIP archive."
 		}
 	}
 
