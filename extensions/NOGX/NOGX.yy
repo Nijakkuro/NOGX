@@ -14,7 +14,7 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.1.2",
+  "extensionVersion":"1.2.0",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"pre_build_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
@@ -64,11 +64,13 @@
   "options":[
     {"$GMExtensionOption":"","%Name":"Enable","defaultValue":"True","description":"Enable Extension","displayName":"","exportToINI":false,"extensionId":null,"guid":"5e375f4a-408d-4a8f-a3ee-505cea17279e","hidden":false,"listItems":[],"name":"Enable","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"__extOptLabel1","defaultValue":"GX Export Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"99226052-fddb-44f3-8a90-99fa831ff7e4","hidden":false,"listItems":[],"name":"__extOptLabel1","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"YaFix","defaultValue":"True","description":"Adds changes to resolve a JavaScript variable conflicts on some web platforms.","displayName":"","exportToINI":false,"extensionId":null,"guid":"a9ba5dbf-b0fa-4ba1-adad-c74e23460d27","hidden":false,"listItems":[],"name":"YaFix","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"ReplaceAlertOnError","defaultValue":"True","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"6b338481-49be-4e15-9ff3-835ce098ab8d","hidden":false,"listItems":[],"name":"ReplaceAlertOnError","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"YaFix","defaultValue":"True","description":"Adds changes to resolve a JavaScript variable conflicts on some web platforms.","displayName":"\"Ya\" Fix","exportToINI":false,"extensionId":null,"guid":"a9ba5dbf-b0fa-4ba1-adad-c74e23460d27","hidden":false,"listItems":[],"name":"YaFix","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"ReplaceAlertOnError","defaultValue":"True","description":"","displayName":"Replace Alert On Error","exportToINI":false,"extensionId":null,"guid":"6b338481-49be-4e15-9ff3-835ce098ab8d","hidden":false,"listItems":[],"name":"ReplaceAlertOnError","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"__extOptLabel2","defaultValue":"HTML5 Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"8a20a7e7-b353-4785-94fe-084e8c78fa3d","hidden":false,"listItems":[],"name":"__extOptLabel2","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"EnableInjectionsForHTML5","defaultValue":"False","description":"The extension will handle HTML injections by it's own. This is useful on runtimes where built-in injections mechanism is broken.","displayName":"Process HTML Injections","exportToINI":false,"extensionId":null,"guid":"fc5f19d9-1981-49f9-9ae1-89d361e98213","hidden":false,"listItems":[],"name":"EnableInjectionsForHTML5","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"__extOptLabel","defaultValue":"Display Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"ba7bcfc3-fd11-48f0-9039-b2a1b9fe559d","hidden":false,"listItems":[],"name":"__extOptLabel","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"LimitAspectRatio","defaultValue":"True","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"e7dc1f70-0efc-46ad-a73f-dc6a33bad046","hidden":false,"listItems":[],"name":"LimitAspectRatio","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"AspectRatioRangeStart","defaultValue":"4:3","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"cdd374b8-4004-4586-89ca-e113af8d80f2","hidden":false,"listItems":[
+    {"$GMExtensionOption":"","%Name":"LimitAspectRatio","defaultValue":"True","description":"","displayName":"Limit Aspect Ratio","exportToINI":false,"extensionId":null,"guid":"e7dc1f70-0efc-46ad-a73f-dc6a33bad046","hidden":false,"listItems":[],"name":"LimitAspectRatio","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"AspectRatioRangeStart","defaultValue":"4:3","description":"","displayName":"Aspect Ratio Range Start","exportToINI":false,"extensionId":null,"guid":"cdd374b8-4004-4586-89ca-e113af8d80f2","hidden":false,"listItems":[
         "9:21",
         "9:16",
         "10:16",
@@ -79,7 +81,7 @@
         "16:9",
         "21:9",
       ],"name":"AspectRatioRangeStart","optType":6,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"AspectRatioRangeEnd","defaultValue":"21:9","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"3e486fcd-9ca6-436b-a627-c444151aba3d","hidden":false,"listItems":[
+    {"$GMExtensionOption":"","%Name":"AspectRatioRangeEnd","defaultValue":"21:9","description":"","displayName":"Aspect Ratio Range End","exportToINI":false,"extensionId":null,"guid":"3e486fcd-9ca6-436b-a627-c444151aba3d","hidden":false,"listItems":[
         "9:21",
         "9:16",
         "10:16",
@@ -90,15 +92,15 @@
         "16:9",
         "21:9",
       ],"name":"AspectRatioRangeEnd","optType":6,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"UseCustomAspectRatio","defaultValue":"False","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"9e888c2b-c03d-4522-b54e-9fc527a55e26","hidden":false,"listItems":[],"name":"UseCustomAspectRatio","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"CustomAspectRatio","defaultValue":"16:9","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"631dab0b-3ddb-45bf-a195-0400c6ccb092","hidden":false,"listItems":[],"name":"CustomAspectRatio","optType":2,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
-    {"$GMExtensionOption":"","%Name":"ResizeApplicationSurface","defaultValue":"True","description":"Enable automatic resizing of application_surface when the screen size changes.","displayName":"","exportToINI":false,"extensionId":null,"guid":"aa6d5212-b0cc-4d64-9b1f-ca0a33080484","hidden":false,"listItems":[],"name":"ResizeApplicationSurface","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"UseCustomAspectRatio","defaultValue":"False","description":"","displayName":"Use Custom Aspect Ratio","exportToINI":false,"extensionId":null,"guid":"9e888c2b-c03d-4522-b54e-9fc527a55e26","hidden":false,"listItems":[],"name":"UseCustomAspectRatio","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"CustomAspectRatio","defaultValue":"16:9","description":"","displayName":"Custom Aspect Ratio","exportToINI":false,"extensionId":null,"guid":"631dab0b-3ddb-45bf-a195-0400c6ccb092","hidden":false,"listItems":[],"name":"CustomAspectRatio","optType":2,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"ResizeApplicationSurface","defaultValue":"True","description":"Enable automatic resizing of application_surface when the screen size changes.","displayName":"Resize Application Surface","exportToINI":false,"extensionId":null,"guid":"aa6d5212-b0cc-4d64-9b1f-ca0a33080484","hidden":false,"listItems":[],"name":"ResizeApplicationSurface","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
   ],
   "optionsFile":"options.json",
   "packageId":"",
   "parent":{
-    "name":"NOGX",
-    "path":"NOGX.yyp",
+    "name":"Extensions",
+    "path":"folders/Extensions.yy",
   },
   "productId":"",
   "resourceType":"GMExtension",
