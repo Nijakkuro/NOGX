@@ -1,29 +1,32 @@
 # NOGX
-It's an extension for **Game Maker** that removes **GX platform** bindings in **GX target**.
-Simply, it's just replacing the `index.html` file, but it also does other useful things.
-
-> Tested only on runtime v2024.14.2.256
-
+An extension for **Game Maker** designed to to make it easier to develop web games using the **GX target**.  
+It removes the **GX platform** bindings in **GX target** replacing the `index.html` file, and also does other useful things.
 > This extension can be useful even if you are not going to use GX target.
+
+> Tested only on runtime `v2024.14.2.256` and `v2024.14.2.260`
 
 ### 1. Replacing `index.html` in GX target
 The extension replaces the html file with its own `index.html`, which excludes bindings and functionality for the GX platform.
 > The extension repackages the zip archive created for GX target.
 
-### 2. `webfiles` folder
+### 2. Patching `runnner.js`
+The extension fixes `runnner.js` to prevent errors or unwanted behavior on some web sites.
+> `"Ya" Fix` and `Replace Alert On Error` options.
+
+### 3. `webfiles` folder
 This is a special folder in the root directory of your project where you can place web files.
 The extension will include them in the **GX target** builds.
 You can also use your custom `index.html` file located here, but it should be based on the default `index.html` file from the extension.
 
-### 3. send_async_event_social
+### 4. send_async_event_social
 The extension adds the ability to send `ev_async_social` from JS to GM for the **GX target**.
 The interface is identical to the one in **HTML5**, namely:
 `GMS_API.send_async_event_social(map)`
 
-### 4. Screen size control (works in other targets, not just GX)
+### 5. Screen size control (works in other targets, not just GX)
 The extension manages the screen size within the specified aspect ratio constraints and also prevents image blur, even in an HTML5 target.
 
-### 5. HTML-Injections (works only on GX)
+### 6. HTML-Injections (works on GX and HTML5)
 The extension implements HTML code injection independently, ignoring Game Maker's implementation! Most injectors described in the [Game Maker manual page](https://manual.gamemaker.io/beta/en/The_Asset_Editors/Extension_Creation/HTML5_Extensions.htm) are supported.
 
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
@@ -37,7 +40,7 @@ NOGX_get_canvas_width();
 NOGX_get_canvas_height();
 NOGX_get_pixel_ratio();
 ```
-Th last function will help you to fix incorrect `device_mouse_x_to_gui` and `device_mouse_y_to_gui` values on **HTML5 target**.  
+The last function will help you to fix incorrect `device_mouse_x_to_gui` and `device_mouse_y_to_gui` values on **HTML5 target**.  
 Example:
 ```gml
 // DRAW GUI EVENT
