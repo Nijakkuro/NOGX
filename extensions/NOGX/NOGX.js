@@ -29,6 +29,10 @@ var GMS_API = {
 	__GML_send_async_event_social_ADDR: undefined,
 	
 	send_async_event_social: function(map) {
+		if(!__NOGX_ready) {
+			return;
+		}
+		
 		// for YYC
 		if(this.__GML_send_async_event_social_ADDR!==undefined) {
 			doGMLCallback(this.__GML_send_async_event_social_ADDR, map);
