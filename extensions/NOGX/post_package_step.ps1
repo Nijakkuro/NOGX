@@ -276,6 +276,16 @@ try {
 							'console.error("Error occured: "+a)'
 						)
 				}
+
+				# Removing the "Downloading data..."
+				$updatedContent = $updatedContent.Replace(
+					'k.setStatus&&k.setStatus(`Downloading data... (${B}/${r})`)',
+					'0'
+				)
+				$updatedContent = $updatedContent.Replace(
+					'k.setStatus&&k.setStatus("Downloading data...")',
+					'0'
+				)
 				
 				# Write updated content to temporary file and add to ZIP
 				$tempFile = [System.IO.Path]::GetTempFileName()
