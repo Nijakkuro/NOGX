@@ -31,6 +31,20 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
 
+### 7. Optional `runner.wasm` compression (GX and HTML5)
+After the build, the extension can create a gzip archive `runner.wasm.gz` (compression level 7) using **7-Zip**.  
+The custom `index.html` tries to load the compressed file first and falls back to the original `runner.wasm` if needed.
+
+This step is **optional**. If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
+
+**7-Zip search order:**
+1. Extension option `7-Zip Path`
+2. Environment variables: `SEVEN_ZIP`, `7ZIP`, `7Z_HOME`, `7ZIP_HOME`
+3. `C:\Program Files\7-Zip\7z.exe`
+4. `C:\Program Files (x86)\7-Zip\7z.exe`
+
+> Gzip decompression in the browser uses `fflate.min.js`, which is copied into `html5game/` during the build (from `webfiles/` if provided, otherwise from the extension).
+
 ## Extension Options
 ![extension options](image_00.png)
 

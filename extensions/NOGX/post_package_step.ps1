@@ -130,6 +130,231 @@ function RenameFile-Zip {
 	}
 }
 
+<#
+.SYNOPSIS
+    Returns path to fflate.min.js, preferring webfiles over the extension default.
+#>
+function Get-NOGXFflateSourceFile {
+	$webfilesDir = [System.IO.Path]::Combine($PSScriptRoot, "..", "..", "webfiles")
+	$webfilesDir = [System.IO.Path]::GetFullPath($webfilesDir)
+	
+	$webfilesCandidates = @(
+		[System.IO.Path]::Combine($webfilesDir, "fflate.min.js"),
+		[System.IO.Path]::Combine($webfilesDir, "html5game", "fflate.min.js")
+	)
+	
+	foreach ($candidate in $webfilesCandidates) {
+		if (Test-Path -Path $candidate -PathType Leaf) {
+			Write-Host "[NOGX] Using 'fflate.min.js' from webfiles directory ('$candidate')"
+			return $candidate
+		}
+	}
+	
+	$defaultFflate = [System.IO.Path]::Combine($PSScriptRoot, "fflate.min.js")
+	if (-not (Test-Path -Path $defaultFflate -PathType Leaf)) {
+		Write-Error "[NOGX] ERROR: fflate.min.js not found in webfiles or extension directory"
+		exit 1
+	}
+	
+	Write-Host "[NOGX] Using default 'fflate.min.js' from extension directory"
+	return $defaultFflate
+}
+
+<#
+.SYNOPSIS
+    Creates html5game folder in the build output and copies fflate.min.js into it.
+#>
+function Copy-NOGXHtml5GameFiles {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[string]$TargetDir
+	)
+	
+	$fflateSource = Get-NOGXFflateSourceFile
+	$html5gameDir = [System.IO.Path]::Combine($TargetDir, "html5game")
+	if (-not (Test-Path -Path $html5gameDir -PathType Container)) {
+		Write-Host "[NOGX] Creating 'html5game' folder in '$TargetDir'"
+		New-Item -ItemType Directory -Path $html5gameDir -Force | Out-Null
+	}
+	
+	$fflateDest = [System.IO.Path]::Combine($html5gameDir, "fflate.min.js")
+	Write-Host "[NOGX] Copying 'fflate.min.js' to '$fflateDest'"
+	Copy-Item -Path $fflateSource -Destination $fflateDest -Force -ErrorAction Stop
+}
+
+<#
+.SYNOPSIS
+    Adds fflate.min.js to html5game folder inside a ZIP archive.
+#>
+function Add-NOGXHtml5GameFilesToZip {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[System.IO.Compression.ZipArchive]$Zip
+	)
+	
+	$fflateSource = Get-NOGXFflateSourceFile
+	
+	$entryPath = "html5game/fflate.min.js"
+	RemoveFile-Zip -Zip $Zip -FileName $entryPath
+	Write-Host "[NOGX] Adding '$entryPath'"
+	[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Zip, $fflateSource, $entryPath) | Out-Null
+}
+
+<#
+.SYNOPSIS
+    Resolves path to 7z.exe using extension option, environment variables, and defaults.
+#>
+function Get-NOGXSevenZipPath {
+	$candidates = @()
+	
+	if (-not [string]::IsNullOrWhiteSpace($env:YYEXTOPT_NOGX_SevenZipPath)) {
+		$candidates += $env:YYEXTOPT_NOGX_SevenZipPath
+	}
+	
+	foreach ($envName in @('SEVEN_ZIP', '7ZIP', '7Z_HOME', '7ZIP_HOME')) {
+		$envValue = (Get-Item "env:$envName" -ErrorAction SilentlyContinue).Value
+		if ([string]::IsNullOrWhiteSpace($envValue)) {
+			continue
+		}
+		
+		if ($envName -match 'HOME$' -and -not $envValue.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) {
+			$candidates += [System.IO.Path]::Combine($envValue, "7z.exe")
+		}
+		else {
+			$candidates += $envValue
+		}
+	}
+	
+	$candidates += @(
+		"C:\Program Files\7-Zip\7z.exe",
+		"C:\Program Files (x86)\7-Zip\7z.exe"
+	)
+	
+	foreach ($candidate in $candidates) {
+		if ([string]::IsNullOrWhiteSpace($candidate)) {
+			continue
+		}
+		
+		$resolvedPath = $candidate
+		if (-not [System.IO.Path]::IsPathRooted($resolvedPath)) {
+			$resolvedPath = [System.IO.Path]::GetFullPath($resolvedPath)
+		}
+		
+		if (Test-Path -Path $resolvedPath -PathType Leaf) {
+			Write-Host "[NOGX] Using 7-Zip: '$resolvedPath'"
+			return $resolvedPath
+		}
+	}
+	
+	Write-Host "[NOGX] 7-Zip not found. runner.wasm.gz will not be created."
+	return $null
+}
+
+<#
+.SYNOPSIS
+    Creates runner.wasm.gz from runner.wasm in a build output directory.
+#>
+function Compress-NOGXRunnerWasm {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[string]$TargetDir
+	)
+	
+	$sevenZip = Get-NOGXSevenZipPath
+	if ($null -eq $sevenZip) {
+		return
+	}
+	
+	$wasmFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm")
+	if (-not (Test-Path -Path $wasmFile -PathType Leaf)) {
+		Write-Host "[NOGX] runner.wasm not found in '$TargetDir'. Skipping gzip creation."
+		return
+	}
+	
+	$gzipFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm.gz")
+	if (Test-Path -Path $gzipFile -PathType Leaf) {
+		Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+	}
+	
+	Write-Host "[NOGX] Creating 'runner.wasm.gz' from 'runner.wasm'"
+	try {
+		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $gzipFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
+		if ($LASTEXITCODE -ne 0) {
+			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wasm.gz (exit code $LASTEXITCODE)."
+			if (Test-Path -Path $gzipFile -PathType Leaf) {
+				Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+			}
+			return
+		}
+		
+		Write-Host "[NOGX] Created '$gzipFile'"
+	}
+	catch {
+		Write-Host "[NOGX] WARNING: Failed to create runner.wasm.gz: $_"
+		if (Test-Path -Path $gzipFile -PathType Leaf) {
+			Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+		}
+	}
+}
+
+<#
+.SYNOPSIS
+    Creates runner.wasm.gz from runner.wasm inside a ZIP archive.
+#>
+function Compress-NOGXRunnerWasmInZip {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[System.IO.Compression.ZipArchive]$Zip
+	)
+	
+	$sevenZip = Get-NOGXSevenZipPath
+	if ($null -eq $sevenZip) {
+		return
+	}
+	
+	$wasmEntry = $Zip.GetEntry("runner.wasm")
+	if ($null -eq $wasmEntry) {
+		Write-Host "[NOGX] runner.wasm not found in ZIP. Skipping gzip creation."
+		return
+	}
+	
+	$tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "NOGX_" + [Guid]::NewGuid().ToString())
+	New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+	
+	try {
+		$wasmFile = [System.IO.Path]::Combine($tempDir, "runner.wasm")
+		$gzipFile = [System.IO.Path]::Combine($tempDir, "runner.wasm.gz")
+		
+		[System.IO.Compression.ZipFileExtensions]::ExtractToFile($wasmEntry, $wasmFile, $true)
+		
+		Write-Host "[NOGX] Creating 'runner.wasm.gz' from 'runner.wasm'"
+		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $gzipFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
+		if ($LASTEXITCODE -ne 0) {
+			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wasm.gz (exit code $LASTEXITCODE)."
+			return
+		}
+		
+		if (-not (Test-Path -Path $gzipFile -PathType Leaf)) {
+			Write-Host "[NOGX] WARNING: runner.wasm.gz was not created by 7-Zip."
+			return
+		}
+		
+		RemoveFile-Zip -Zip $Zip -FileName "runner.wasm.gz"
+		Write-Host "[NOGX] Adding 'runner.wasm.gz'"
+		[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Zip, $gzipFile, "runner.wasm.gz") | Out-Null
+	}
+	catch {
+		Write-Host "[NOGX] WARNING: Failed to create runner.wasm.gz in ZIP: $_"
+	}
+	finally {
+		Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+	}
+}
+
 # Main execution block
 $zip = $null
 try {
@@ -163,6 +388,10 @@ try {
 			$indexFile = [System.IO.Path]::Combine($YYtargetFile, $env:YYPLATFORM_option_html5_outputname)
 			Write-Host "[NOGX] Overriding '$indexFile' by '$sourceFile'"
 			Copy-Item -Path $sourceFile -Destination $indexFile -Force -ErrorAction Stop
+			
+			Copy-NOGXHtml5GameFiles -TargetDir $YYtargetFile
+			Compress-NOGXRunnerWasm -TargetDir $YYtargetFile
+			
 			Write-Host "[NOGX] Done!"
 			exit 0
 		}
@@ -180,6 +409,9 @@ try {
 			$indexFile = $env:YYPLATFORM_option_html5_outputname
 			Write-Host "[NOGX] Adding new '$indexFile' from '$sourceFile'"
 			[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $sourceFile, $env:YYPLATFORM_option_html5_outputname) | Out-Null
+			
+			Add-NOGXHtml5GameFilesToZip -Zip $zip
+			Compress-NOGXRunnerWasmInZip -Zip $zip
 			
 			$zip.Dispose()
 			Write-Host "[NOGX] Repackaging complete!"
@@ -349,6 +581,9 @@ try {
 		RemoveFile-Zip -Zip $zip -FileName "index.html"
 		Write-Host "[NOGX] Add processed 'index.html'"
 		[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $sourceFile, "index.html") | Out-Null
+		
+		Add-NOGXHtml5GameFilesToZip -Zip $zip
+		Compress-NOGXRunnerWasmInZip -Zip $zip
 		
 		# Step 8: Close and save ZIP archive
 		$zip.Dispose()
