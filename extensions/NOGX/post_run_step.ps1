@@ -148,13 +148,13 @@ function Get-NOGXSevenZipPath {
 		}
 	}
 	
-	Write-Host "[NOGX] 7-Zip not found. runner.wasm.gz will not be created."
+	Write-Host "[NOGX] 7-Zip not found. runner.wbin will not be created."
 	return $null
 }
 
 <#
 .SYNOPSIS
-    Creates runner.wasm.gz from runner.wasm in a build output directory.
+    Creates runner.wbin (gzip-compressed runner.wasm) in a build output directory.
 #>
 function Compress-NOGXRunnerWasm {
 	[CmdletBinding()]
@@ -170,32 +170,35 @@ function Compress-NOGXRunnerWasm {
 	
 	$wasmFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm")
 	if (-not (Test-Path -Path $wasmFile -PathType Leaf)) {
-		Write-Host "[NOGX] runner.wasm not found in '$TargetDir'. Skipping gzip creation."
+		Write-Host "[NOGX] runner.wasm not found in '$TargetDir'. Skipping compressed wasm creation."
 		return
 	}
 	
-	$gzipFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm.gz")
-	if (Test-Path -Path $gzipFile -PathType Leaf) {
-		Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+	$wbinFile = [System.IO.Path]::Combine($TargetDir, "runner.wbin")
+	$legacyGzFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm.gz")
+	foreach ($oldFile in @($wbinFile, $legacyGzFile)) {
+		if (Test-Path -Path $oldFile -PathType Leaf) {
+			Remove-Item -Path $oldFile -Force -ErrorAction SilentlyContinue
+		}
 	}
 	
-	Write-Host "[NOGX] Creating 'runner.wasm.gz' from 'runner.wasm'"
+	Write-Host "[NOGX] Creating 'runner.wbin' from 'runner.wasm'"
 	try {
-		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $gzipFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
+		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $wbinFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
 		if ($LASTEXITCODE -ne 0) {
-			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wasm.gz (exit code $LASTEXITCODE)."
-			if (Test-Path -Path $gzipFile -PathType Leaf) {
-				Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wbin (exit code $LASTEXITCODE)."
+			if (Test-Path -Path $wbinFile -PathType Leaf) {
+				Remove-Item -Path $wbinFile -Force -ErrorAction SilentlyContinue
 			}
 			return
 		}
 		
-		Write-Host "[NOGX] Created '$gzipFile'"
+		Write-Host "[NOGX] Created '$wbinFile'"
 	}
 	catch {
-		Write-Host "[NOGX] WARNING: Failed to create runner.wasm.gz: $_"
-		if (Test-Path -Path $gzipFile -PathType Leaf) {
-			Remove-Item -Path $gzipFile -Force -ErrorAction SilentlyContinue
+		Write-Host "[NOGX] WARNING: Failed to create runner.wbin: $_"
+		if (Test-Path -Path $wbinFile -PathType Leaf) {
+			Remove-Item -Path $wbinFile -Force -ErrorAction SilentlyContinue
 		}
 	}
 }

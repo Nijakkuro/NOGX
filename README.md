@@ -32,8 +32,10 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
 
 ### 7. Optional `runner.wasm` compression (GX and HTML5)
-After the build, the extension can create a gzip archive `runner.wasm.gz` (compression level 7) using **7-Zip**.  
-The custom `index.html` tries to load the compressed file first and falls back to the original `runner.wasm` if needed.
+After the build, if `runner.wasm` is present, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip**.  
+The file keeps a `.wbin` extension on purpose: CDN/edge hosts often break `.gz` delivery, so the gzip stream is transported as opaque binary and decompressed manually in the browser.
+
+The custom `index.html` tries to load `runner.wbin` first, decompresses it with `fflate.decompressSync`, and falls back to the original `runner.wasm` if needed.
 
 This step is **optional**. If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
 

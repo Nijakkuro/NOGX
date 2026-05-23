@@ -106,14 +106,14 @@ ${GM_HTML5_PreBody}
 			}
 			try {
 				try {
-					const response = await fetch("runner.wasm.gz");
+					const response = await fetch("runner.wbin");
 					if (!response.ok) {
 						throw new Error("Compressed wasm not found");
 					}
 					compressed = new Uint8Array(await response.arrayBuffer());
 					wasmBinary = fflate.decompressSync(compressed);
 					compressed = null;
-					console.log("Compressed wasm loaded:", wasmBinary.length);
+					console.log("Compressed wasm loaded from runner.wbin:", wasmBinary.length);
 					const result = await WebAssembly.instantiate(
 						wasmBinary,
 						prepareWasmImports(imports)
