@@ -263,6 +263,11 @@ function Compress-NOGXRunnerWasm {
 		[string]$TargetDir
 	)
 	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping runner.wbin creation."
+		return
+	}
+	
 	$sevenZip = Get-NOGXSevenZipPath
 	if ($null -eq $sevenZip) {
 		return
@@ -313,6 +318,11 @@ function Compress-NOGXRunnerWasmInZip {
 		[Parameter(Mandatory)]
 		[System.IO.Compression.ZipArchive]$Zip
 	)
+	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping runner.wbin creation."
+		return
+	}
 	
 	$sevenZip = Get-NOGXSevenZipPath
 	if ($null -eq $sevenZip) {

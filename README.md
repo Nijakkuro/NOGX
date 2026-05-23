@@ -37,7 +37,7 @@ The file keeps a `.wbin` extension on purpose: CDN/edge hosts often break `.gz` 
 
 The custom `index.html` tries to load `runner.wbin` first, decompresses it with `fflate.decompressSync`, and falls back to the original `runner.wasm` if needed.
 
-This step is **optional**. If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
+This step is **optional** and controlled by the `Enable code compression` extension option. If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
 
 **7-Zip search order:**
 1. Extension option `7-Zip Path`
