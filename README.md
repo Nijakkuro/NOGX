@@ -32,12 +32,18 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
 
 ### 7. Optional `runner.wasm` compression (GX and HTML5)
-After the build, if `runner.wasm` is present, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip**.  
+When the `Enable code compression` option is **on**, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip**, copy `fflate.min.js` into `html5game/`, and inject a custom `Module.instantiateWasm` loader into `index.html`.  
 The file keeps a `.wbin` extension on purpose: CDN/edge hosts often break `.gz` delivery, so the gzip stream is transported as opaque binary and decompressed manually in the browser.
 
-The custom `index.html` tries to load `runner.wbin` first, decompresses it with `fflate.decompressSync`, and falls back to the original `runner.wasm` if needed.
+The loader tries to fetch `runner.wbin` first, decompresses it with `fflate.decompressSync`, and falls back to the original `runner.wasm` if needed.
 
-This step is **optional** and controlled by the `Enable code compression` extension option. If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
+When `Enable code compression` is **off**:
+- `runner.wbin` is not created
+- `fflate.min.js` is not copied into the build
+- the wasm loader block is removed from `index.html` during pre-build
+- the game uses the standard GameMaker `runner.wasm` loading path
+
+If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
 
 **7-Zip search order:**
 1. Extension option `7-Zip Path`
@@ -45,7 +51,7 @@ This step is **optional** and controlled by the `Enable code compression` extens
 3. `C:\Program Files\7-Zip\7z.exe`
 4. `C:\Program Files (x86)\7-Zip\7z.exe`
 
-> Gzip decompression in the browser uses `fflate.min.js`, which is copied into `html5game/` during the build (from `webfiles/` if provided, otherwise from the extension).
+> For a custom `webfiles/index.html`, keep the `<!-- NOGX_CODE_COMPRESSION_START -->` / `<!-- NOGX_CODE_COMPRESSION_END -->` markers around the compression loader block so the option can enable or remove it automatically.
 
 ## Extension Options
 ![extension options](image_00.png)

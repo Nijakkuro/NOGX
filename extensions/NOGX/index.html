@@ -74,11 +74,14 @@ ${GM_HTML5_PreHead}
   </style>
 
   ${GM_HTML5_PostStyle}
+  <link rel="preload" href="game.unx" as="fetch" crossorigin="anonymous">
+  <link rel="preload" href="runner.data" as="fetch" crossorigin="anonymous">
 </head>
 
 ${GM_HTML5_PostHead}
 ${GM_HTML5_PreBody}
 <body>
+	<!-- NOGX_CODE_COMPRESSION_START -->
 	<script src="html5game/fflate.min.js"></script>
 	<script>
 	window.Module = window.Module || {};
@@ -133,6 +136,7 @@ ${GM_HTML5_PreBody}
 		return {};
 	};
 	</script>
+	<!-- NOGX_CODE_COMPRESSION_END -->
 
 	<script>
 	(function () {

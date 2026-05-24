@@ -171,6 +171,11 @@ function Copy-NOGXHtml5GameFiles {
 		[string]$TargetDir
 	)
 	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping fflate.min.js copy."
+		return
+	}
+	
 	$fflateSource = Get-NOGXFflateSourceFile
 	$html5gameDir = [System.IO.Path]::Combine($TargetDir, "html5game")
 	if (-not (Test-Path -Path $html5gameDir -PathType Container)) {
@@ -193,6 +198,11 @@ function Add-NOGXHtml5GameFilesToZip {
 		[Parameter(Mandatory)]
 		[System.IO.Compression.ZipArchive]$Zip
 	)
+	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping fflate.min.js copy."
+		return
+	}
 	
 	$fflateSource = Get-NOGXFflateSourceFile
 	
