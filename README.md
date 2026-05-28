@@ -61,7 +61,10 @@ If 7-Zip is not found or compression fails, the build continues — only a messa
 NOGX_get_canvas_width();
 NOGX_get_canvas_height();
 NOGX_get_pixel_ratio();
+NOGX_is_ready();
 ```
+`NOGX_is_ready()` returns the JS `__NOGX_ready` flag on **GX target** (becomes `true` after extension init). On other targets it returns `false`.
+
 The last function will help you to fix incorrect `device_mouse_x_to_gui` and `device_mouse_y_to_gui` values on **HTML5 target**.  
 Example:
 ```gml
