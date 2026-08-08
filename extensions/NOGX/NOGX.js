@@ -8,17 +8,35 @@ function triggerPayment(itemId, _callback_PaymentComplete) {
 	}
 }
 
-// Allow keyboard input when game elements are inactive
+// Allow keyboard input when typing elements are active
+
+function __NOGX_is_typing_active() {
+	const activeEl = document.activeElement;
+	
+	if (!activeEl) return false;
+
+	const isEditable = 
+		activeEl.tagName === 'INPUT' || 
+		activeEl.tagName === 'TEXTAREA' || 
+		activeEl.isContentEditable;
+
+	// exclude buttons, checkboxes and radio-buttons
+	if (activeEl.tagName === 'INPUT' && 
+		['button', 'submit', 'reset', 'checkbox', 'radio'].includes(activeEl.type)) {
+		return false;
+	}
+
+	return isEditable;
+}
+
 window.addEventListener('keydown', e => {
-	if(document.activeElement!==document.body
-	&& document.activeElement!==Module.canvas) {
+	if(__NOGX_is_typing_active()) {
 		e.stopImmediatePropagation();
 	}
 }, true);
 
 window.addEventListener('keyup', e => {
-	if(document.activeElement!==document.body
-	&& document.activeElement!==Module.canvas) {
+	if(__NOGX_is_typing_active()) {
 		e.stopImmediatePropagation();
 	}
 }, true);
