@@ -51,64 +51,6 @@ if ([string]::IsNullOrWhiteSpace($YYtempFolder)) {
 
 <#
 .SYNOPSIS
-    Returns path to fflate.min.js, preferring webfiles over the extension default.
-#>
-function Get-NOGXFflateSourceFile {
-	$webfilesDir = [System.IO.Path]::Combine($PSScriptRoot, "..", "..", "webfiles")
-	$webfilesDir = [System.IO.Path]::GetFullPath($webfilesDir)
-	
-	$webfilesCandidates = @(
-		[System.IO.Path]::Combine($webfilesDir, "fflate.min.js"),
-		[System.IO.Path]::Combine($webfilesDir, "html5game", "fflate.min.js")
-	)
-	
-	foreach ($candidate in $webfilesCandidates) {
-		if (Test-Path -Path $candidate -PathType Leaf) {
-			Write-Host "[NOGX] Using 'fflate.min.js' from webfiles directory ('$candidate')"
-			return $candidate
-		}
-	}
-	
-	$defaultFflate = [System.IO.Path]::Combine($PSScriptRoot, "fflate.min.js")
-	if (-not (Test-Path -Path $defaultFflate -PathType Leaf)) {
-		Write-Error "[NOGX] ERROR: fflate.min.js not found in webfiles or extension directory"
-		exit 1
-	}
-	
-	Write-Host "[NOGX] Using default 'fflate.min.js' from extension directory"
-	return $defaultFflate
-}
-
-<#
-.SYNOPSIS
-    Creates html5game folder in the build output and copies fflate.min.js into it.
-#>
-function Copy-NOGXHtml5GameFiles {
-	[CmdletBinding()]
-	param(
-		[Parameter(Mandatory)]
-		[string]$TargetDir
-	)
-	
-	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
-		Write-Host "[NOGX] Code compression is disabled. Skipping fflate.min.js copy."
-		return
-	}
-	
-	$fflateSource = Get-NOGXFflateSourceFile
-	$html5gameDir = [System.IO.Path]::Combine($TargetDir, "html5game")
-	if (-not (Test-Path -Path $html5gameDir -PathType Container)) {
-		Write-Host "[NOGX] Creating 'html5game' folder in '$TargetDir'"
-		New-Item -ItemType Directory -Path $html5gameDir -Force | Out-Null
-	}
-	
-	$fflateDest = [System.IO.Path]::Combine($html5gameDir, "fflate.min.js")
-	Write-Host "[NOGX] Copying 'fflate.min.js' to '$fflateDest'"
-	Copy-Item -Path $fflateSource -Destination $fflateDest -Force -ErrorAction Stop
-}
-
-<#
-.SYNOPSIS
     Resolves path to 7z.exe using extension option, environment variables, and defaults.
 #>
 function Get-NOGXSevenZipPath {
@@ -249,8 +191,6 @@ try {
 		Write-Host "[NOGX] Overriding '$indexFile' by '$sourceFile'"
 		Copy-Item -Path $sourceFile -Destination $indexFile -Force -ErrorAction Stop
 		
-		Copy-NOGXHtml5GameFiles -TargetDir $outputDir
-		
 		Compress-NOGXRunnerWasm -TargetDir $outputDir
 		
 		Write-Host "[NOGX] Done!"
@@ -309,7 +249,6 @@ try {
 			exit 1
 		}
 		
-		Copy-NOGXHtml5GameFiles -TargetDir $outputDir
 		Compress-NOGXRunnerWasm -TargetDir $outputDir
 	}
 	Write-Host "[NOGX] Done."

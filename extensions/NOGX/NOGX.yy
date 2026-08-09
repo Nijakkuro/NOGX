@@ -14,7 +14,7 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.1.5",
+  "extensionVersion":"1.1.6",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"pre_build_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
@@ -103,6 +103,7 @@
     {"$GMExtensionOption":"","%Name":"ResizeApplicationSurface","defaultValue":"True","description":"Enable automatic resizing of application_surface when the screen size changes.","displayName":"Resize Application Surface","exportToINI":false,"extensionId":null,"guid":"aa6d5212-b0cc-4d64-9b1f-ca0a33080484","hidden":false,"listItems":[],"name":"ResizeApplicationSurface","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"Code compression","defaultValue":"Code compression","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"11809f66-d385-4b11-a451-0d41de5e9e4b","hidden":false,"listItems":[],"name":"Code compression","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"EnableCodeCompression","defaultValue":"True","description":"After the build, the extension can create a gzip-compressed binary file","displayName":"Enable code compression","exportToINI":false,"extensionId":null,"guid":"8fc683ce-df5c-4cb5-84a4-889d35e91a05","hidden":false,"listItems":[],"name":"EnableCodeCompression","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"EnableLoadDebug","defaultValue":"False","description":"Show the current loading stage of the loading percentage.","displayName":"Enable load debug","exportToINI":false,"extensionId":null,"guid":"fa36426d-1d84-4d84-a20e-a586a50692d0","hidden":false,"listItems":[],"name":"EnableLoadDebug","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"SevenZipPath","defaultValue":"","description":"Path to 7-Zip executable (7z.exe). Used to create runner.wbin after build. If empty, environment variables and default install paths are checked.","displayName":"7-Zip Path","exportToINI":false,"extensionId":null,"guid":"b4e8c1d2-3f5a-4b6c-9d0e-1a2b3c4d5e6f","hidden":false,"listItems":[],"name":"SevenZipPath","optType":2,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
   ],
   "optionsFile":"options.json",

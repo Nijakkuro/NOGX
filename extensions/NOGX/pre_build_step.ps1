@@ -394,6 +394,20 @@ function Inject-TextFile {
 				$content = $content.Replace("`${$key}", $value)
 			}
 		}
+
+		# Replace extension option placeholders used directly by index.html.
+		$extensionOptions = (Get-ChildItem Env: | Where-Object Name -like 'YYEXTOPT_*').Name
+		foreach ($optionName in $extensionOptions) {
+			try {
+				$optionValue = (Get-Item "env:$optionName").Value
+				if ($null -ne $optionValue) {
+					$content = $content.Replace("`${$optionName}", $optionValue)
+				}
+			}
+			catch {
+				Write-Warning "[NOGX] Failed to inject extension option '$optionName': $_"
+			}
+		}
 		
 		# Write the processed content to output file
 		$content | Out-File -FilePath $outputFilename -Encoding utf8 -ErrorAction Stop

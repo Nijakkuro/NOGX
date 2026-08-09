@@ -32,14 +32,15 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
 
 ### 7. Optional `runner.wasm` compression (GX and HTML5)
-When the `Enable code compression` option is **on**, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip**, copy `fflate.min.js` into `html5game/`, and inject a custom `Module.instantiateWasm` loader into `index.html`.  
+When the `Enable code compression` option is **on**, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip** and inject a custom `Module.instantiateWasm` loader into `index.html`.
 The file keeps a `.wbin` extension on purpose: CDN/edge hosts often break `.gz` delivery, so the gzip stream is transported as opaque binary and decompressed manually in the browser.
 
-The loader tries to fetch `runner.wbin` first, decompresses it with `fflate.decompressSync`, and falls back to the original `runner.wasm` if needed.
+On browsers with `DecompressionStream` and `WebAssembly.instantiateStreaming`, the loader decompresses and instantiates `runner.wbin` as a stream to minimize peak memory use. If native compressed streaming is unavailable or fails, it loads the original `runner.wasm` directly without a JavaScript decompression step.
+
+The current GameMaker WASM runner requires WebAssembly Exception Handling. Minimum supported browser versions are Chrome and Android System WebView 95, Firefox 100, and Safari/iOS 15.2. Older engines cannot compile `runner.wasm`; this feature cannot be polyfilled by the loader. NOGX detects this before loading the runner and asks the user to update their browser or WebView.
 
 When `Enable code compression` is **off**:
 - `runner.wbin` is not created
-- `fflate.min.js` is not copied into the build
 - the wasm loader block is removed from `index.html` during pre-build
 - the game uses the standard GameMaker `runner.wasm` loading path
 

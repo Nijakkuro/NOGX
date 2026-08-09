@@ -79,8 +79,90 @@ ${GM_HTML5_PreHead}
 ${GM_HTML5_PostHead}
 ${GM_HTML5_PreBody}
 <body>
+	<script>
+	window.__NOGX_LOAD_DEBUG = "${YYEXTOPT_NOGX_EnableLoadDebug}" === "True";
+	window.__NOGX_LOAD_STAGE = "Initializing";
+	window.nogxSetLoadStage = function (stage) {
+		window.__NOGX_LOAD_STAGE = stage;
+		if (!window.__NOGX_LOAD_DEBUG) {
+			return;
+		}
+		const statusElement = document.getElementById("status");
+		if (statusElement) {
+			statusElement.textContent = stage;
+		}
+	};
+	window.nogxSupportsWasmExceptionHandling = function () {
+		return (
+			typeof WebAssembly === "object" &&
+			typeof WebAssembly.Tag === "function" &&
+			typeof WebAssembly.Exception === "function"
+		);
+	};
+	window.nogxIsWasmExceptionHandlingError = function (error) {
+		if (!error) {
+			return false;
+		}
+		const message = String(error.message || error).toLowerCase();
+		return (
+			error.name === "CompileError" &&
+			(
+				message.includes("unexpected section <exception>") ||
+				message.includes("experimental-wasm-eh")
+			)
+		);
+	};
+	window.nogxShowUnsupportedRuntime = function () {
+		const statusElement = document.getElementById("status");
+		const progressElement = document.getElementById("loadingProgress");
+		if (progressElement) {
+			progressElement.style.display = "none";
+		}
+		if (!statusElement) {
+			return;
+		}
+		statusElement.style.display = "block";
+		statusElement.textContent = window.__NOGX_LOAD_DEBUG
+			? "WebAssembly Exception Handling required (Android WebView 95+)"
+			: (
+				typeof window.nogxGetUnsupportedRuntimeMessage === "function"
+					? window.nogxGetUnsupportedRuntimeMessage()
+					: "Your browser is outdated. Update it to run this game."
+			);
+	};
+	window.nogxTryHtml5BuildFallback = async function () {
+		if (window.__NOGX_HTML5_FALLBACK_TRIED) {
+			return false;
+		}
+		if (/\/html5build(?:\/|$)/i.test(location.pathname)) {
+			return false;
+		}
+		window.__NOGX_HTML5_FALLBACK_TRIED = true;
+		try {
+			let response = await fetch("html5build/index.html", {
+				method: "HEAD",
+				cache: "no-store"
+			});
+			if (!response.ok || response.status === 405) {
+				response = await fetch("html5build/index.html", {
+					method: "GET",
+					cache: "no-store"
+				});
+			}
+			if (!response.ok) {
+				return false;
+			}
+			location.replace(
+				"html5build/index.html" + location.search + location.hash
+			);
+			return true;
+		} catch (_) {
+			return false;
+		}
+	};
+	</script>
+
 	<!-- NOGX_CODE_COMPRESSION_START -->
-	<script src="html5game/fflate.min.js"></script>
 	<script>
 	window.Module = window.Module || {};
 	Module.instantiateWasm = function (imports, successCallback) {
@@ -91,44 +173,138 @@ ${GM_HTML5_PreBody}
 			return wasmImports;
 		}
 
+		function formatLoadError(error) {
+			const name = error && error.name ? error.name : "Error";
+			const message = error && error.message
+				? String(error.message).replace(/\s+/g, " ").trim()
+				: "";
+			if (!message || message === name) {
+				return name;
+			}
+			return name + ": " + message.slice(0, 120);
+		}
+
+		function waitForNextTask() {
+			return new Promise(resolve => setTimeout(resolve, 0));
+		}
+
 		(async () => {
-			let compressed = null;
-			let wasmBinary = null;
+			const wasmImports = prepareWasmImports(imports);
+
 			async function loadNormalWasm() {
 				console.warn("Loading fallback wasm");
-				const response = await fetch("runner.wasm");
+				window.nogxSetLoadStage("Fetching fallback WASM");
+				let response = await fetch("runner.wasm");
 				if (!response.ok) {
 					throw new Error("Fallback wasm not found");
 				}
-				wasmBinary = new Uint8Array(await response.arrayBuffer());
-				const result = await WebAssembly.instantiate(wasmBinary, prepareWasmImports(imports));
-				wasmBinary = null;
+
+				let result;
+				if (
+					typeof WebAssembly.instantiateStreaming === "function" &&
+					response.body
+				) {
+					try {
+						window.nogxSetLoadStage("Instantiating fallback WASM");
+						result = await WebAssembly.instantiateStreaming(
+							response,
+							wasmImports
+						);
+					} catch (streamError) {
+						console.warn("Fallback WASM streaming failed", streamError);
+						response = null;
+						if (!streamError || streamError.name !== "TypeError") {
+							throw streamError;
+						}
+						await waitForNextTask();
+						window.nogxSetLoadStage("Retrying fallback WASM");
+						response = await fetch("runner.wasm");
+						if (!response.ok) {
+							throw new Error("Fallback wasm retry not found");
+						}
+					}
+				}
+
+				if (!result) {
+					window.nogxSetLoadStage("Compiling fallback WASM");
+					const wasmBinary = new Uint8Array(await response.arrayBuffer());
+					response = null;
+					result = await WebAssembly.instantiate(wasmBinary, wasmImports);
+				}
+
 				successCallback(result.instance);
 			}
+
 			try {
+				const canStreamCompressed =
+					typeof DecompressionStream === "function" &&
+					typeof WebAssembly.instantiateStreaming === "function" &&
+					typeof Response === "function" &&
+					Response.prototype &&
+					"body" in Response.prototype;
+
+				if (!canStreamCompressed) {
+					window.nogxSetLoadStage("Compressed streaming unavailable");
+					await loadNormalWasm();
+					return;
+				}
+
+				let compressedResponse = null;
+				let wasmStream = null;
+				let wasmResponse = null;
 				try {
-					const response = await fetch("runner.wbin");
-					if (!response.ok) {
-						throw new Error("Compressed wasm not found");
+					window.nogxSetLoadStage("Fetching compressed WASM");
+					compressedResponse = await fetch("runner.wbin");
+					if (!compressedResponse.ok || !compressedResponse.body) {
+						throw new Error("Compressed wasm stream not found");
 					}
-					compressed = new Uint8Array(await response.arrayBuffer());
-					wasmBinary = fflate.decompressSync(compressed);
-					compressed = null;
-					console.log("Compressed wasm loaded from runner.wbin:", wasmBinary.length);
-					const result = await WebAssembly.instantiate(
-						wasmBinary,
-						prepareWasmImports(imports)
+
+					window.nogxSetLoadStage("Streaming compressed WASM");
+					wasmStream = compressedResponse.body.pipeThrough(
+						new DecompressionStream("gzip")
 					);
-					wasmBinary = null;
+					compressedResponse = null;
+					wasmResponse = new Response(wasmStream, {
+						headers: { "Content-Type": "application/wasm" }
+					});
+					wasmStream = null;
+
+					window.nogxSetLoadStage("Instantiating compressed WASM");
+					const result = await WebAssembly.instantiateStreaming(
+						wasmResponse,
+						wasmImports
+					);
+					wasmResponse = null;
+					console.log("Compressed WASM loaded from runner.wbin");
 					successCallback(result.instance);
-				} catch (e) {
-					console.warn("Compressed wasm failed", e);
-					compressed = null;
-					wasmBinary = null;
+				} catch (compressedError) {
+					console.warn("Compressed wasm failed", compressedError);
+					compressedResponse = null;
+					wasmStream = null;
+					wasmResponse = null;
+					if (window.nogxIsWasmExceptionHandlingError(compressedError)) {
+						if (await window.nogxTryHtml5BuildFallback()) {
+							return;
+						}
+						window.nogxShowUnsupportedRuntime();
+						return;
+					}
+					window.nogxSetLoadStage("Falling back to runner.wasm");
+					await waitForNextTask();
 					await loadNormalWasm();
 				}
 			} catch (err) {
 				console.error("WASM load failed", err);
+				if (await window.nogxTryHtml5BuildFallback()) {
+					return;
+				}
+				if (window.nogxIsWasmExceptionHandlingError(err)) {
+					window.nogxShowUnsupportedRuntime();
+					return;
+				}
+				window.nogxSetLoadStage(
+					"WASM load failed: " + formatLoadError(err)
+				);
 			}
 		})();
 		return {};
@@ -301,6 +477,8 @@ ${GM_HTML5_PreBody}
   <div class="progress-bar" id="loadingProgress"></div>
 
   <script>
+	window.nogxSetLoadStage(window.__NOGX_LOAD_STAGE || "Initializing");
+
 	var Module = window.Module || {};
 	Object.assign(Module, {
 	  canvas: document.getElementById("canvas"),
@@ -316,6 +494,7 @@ ${GM_HTML5_PreBody}
 	  
 	  setStatus: function (text) {
 		if (text === "Running..." || text === "") return;
+		if (window.__NOGX_LOAD_DEBUG) return;
 		document.getElementById("status").textContent = text || "";
 	  },
 	  
@@ -326,7 +505,9 @@ ${GM_HTML5_PreBody}
 		if (progressElem) {
 		  progressElem.style.setProperty("--progress", progress);
 		}
-		this.setStatus(progress);
+		if (!window.__NOGX_LOAD_DEBUG) {
+		  this.setStatus(progress);
+		}
 	  },
 	  
 	  _computeFakeProgress: function () {
@@ -342,6 +523,7 @@ ${GM_HTML5_PreBody}
 	  monitorRunDependencies: function (left) {
 		this._totalDeps = Math.max(this._totalDeps, left);
 		if (this._startTime === null) {
+		  window.nogxSetLoadStage("Loading dependencies");
 		  this._startTime = Date.now();
 		  this._progressTimer = setInterval(() => {
 			const p = this._computeFakeProgress();
@@ -399,6 +581,7 @@ ${GM_HTML5_PreBody}
 
     function onFirstFrameRendered() {
       console.log("First frame rendered");
+      window.nogxSetLoadStage("First frame rendered");
       Module.show();
     }
 
@@ -445,14 +628,36 @@ ${GM_HTML5_PreBody}
 		ko: "창을 기다리는 중",
 	  };
 
-	  function getWaitMessage() {
+	  const UNSUPPORTED_RUNTIME_MESSAGES = {
+		en: "Your browser is outdated. Update it to run this game.",
+		ru: "Ваш браузер устарел. Обновите его, чтобы запустить игру.",
+		zh: "您的浏览器版本过旧。请更新后再运行游戏。",
+		es: "Tu navegador está desactualizado. Actualízalo para ejecutar el juego.",
+		hi: "आपका ब्राउज़र पुराना है। गेम चलाने के लिए इसे अपडेट करें।",
+		ar: "متصفحك قديم. حدّثه لتشغيل اللعبة.",
+		pt: "Seu navegador está desatualizado. Atualize-o para executar o jogo.",
+		fr: "Votre navigateur est obsolète. Mettez-le à jour pour lancer le jeu.",
+		de: "Ihr Browser ist veraltet. Aktualisieren Sie ihn, um das Spiel zu starten.",
+		ja: "ブラウザーが古いため、ゲームを起動できません。更新してください。",
+		ko: "브라우저가 오래되었습니다. 게임을 실행하려면 업데이트하세요.",
+	  };
+
+	  function getLocalizedMessage(messages) {
 		const langs = navigator.languages || [navigator.language || "en"];
 		for (const lang of langs) {
 		  const code = lang.split("-")[0].toLowerCase();
-		  if (WAIT_MESSAGES[code]) return WAIT_MESSAGES[code];
+		  if (messages[code]) return messages[code];
 		}
-		return WAIT_MESSAGES.en;
+		return messages.en;
 	  }
+
+	  function getWaitMessage() {
+		return getLocalizedMessage(WAIT_MESSAGES);
+	  }
+
+	  window.nogxGetUnsupportedRuntimeMessage = function () {
+		return getLocalizedMessage(UNSUPPORTED_RUNTIME_MESSAGES);
+	  };
 
 	  function waitForSize(callback) {
 		const base = getWaitMessage();
@@ -461,12 +666,24 @@ ${GM_HTML5_PreBody}
 		const DOTS = ["", ".", "..", "..."];
 		const CYCLE = 30;
 
+		window.nogxSetLoadStage("Waiting for window");
+
 		function check() {
 		  if (window.innerWidth > 0 && window.innerHeight > 0) {
-			statusEl.textContent = "0%";
+			if (window.__NOGX_LOAD_DEBUG) {
+			  window.nogxSetLoadStage("Loading runtime");
+			} else {
+			  statusEl.textContent = "0%";
+			}
 			callback();
 		  } else {
-			statusEl.textContent = base + DOTS[Math.floor(frame / CYCLE) % DOTS.length];
+			if (window.__NOGX_LOAD_DEBUG) {
+			  window.nogxSetLoadStage(
+				"Waiting for window" + DOTS[Math.floor(frame / CYCLE) % DOTS.length]
+			  );
+			} else {
+			  statusEl.textContent = base + DOTS[Math.floor(frame / CYCLE) % DOTS.length];
+			}
 			frame++;
 			requestAnimationFrame(check);
 		  }
@@ -474,7 +691,14 @@ ${GM_HTML5_PreBody}
 		check();
 	  }
 
-	  waitForSize(function () {
+	  waitForSize(async function () {
+		if (!window.nogxSupportsWasmExceptionHandling()) {
+		  if (await window.nogxTryHtml5BuildFallback()) {
+			return;
+		  }
+		  window.nogxShowUnsupportedRuntime();
+		  return;
+		}
 		const script = document.createElement("script");
 		script.src = "runner.js";
 		document.body.appendChild(script);
