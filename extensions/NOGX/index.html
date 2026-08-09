@@ -139,7 +139,23 @@ ${GM_HTML5_PreBody}
 		}
 		window.__NOGX_HTML5_FALLBACK_TRIED = true;
 		try {
-			let response = await fetch("html5build/index.html", {
+			let response = await fetch("html5build/html5index.html", {
+				method: "HEAD",
+				cache: "no-store"
+			});
+			if (!response.ok || response.status === 405) {
+				response = await fetch("html5build/html5index.html", {
+					method: "GET",
+					cache: "no-store"
+				});
+			}
+			if (response.ok) {
+				location.replace(
+					"html5build/html5index.html" + location.search + location.hash
+				);
+				return true;
+			}
+			response = await fetch("html5build/index.html", {
 				method: "HEAD",
 				cache: "no-store"
 			});
