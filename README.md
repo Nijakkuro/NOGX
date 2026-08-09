@@ -18,6 +18,9 @@ This is a special folder in the root directory of your project where you can pla
 The extension will include them in the **GX target** builds.
 You can also use your custom `index.html` file located here, but it should be based on the default `index.html` file from the extension.
 
+On GX builds, Included Files from `datafiles` that are set to export to **All** or **GX.games** are also copied into the HTML5 **Folder name** subfolder (Game Options → HTML5 → Folder name, default `html5game`), preserving the relative path under `datafiles`.  
+`webfiles` are applied **after** that copy, so on path conflicts `webfiles` wins (for example `webfiles/html5game/icon.png` overrides the Included File).
+
 ### 4. send_async_event_social
 The extension adds the ability to send `ev_async_social` from JS to GM for the **GX target**.
 The interface is identical to the one in **HTML5**, namely:

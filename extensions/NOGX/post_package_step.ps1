@@ -482,7 +482,11 @@ try {
 			}
 		}
 		
-		# Step 7: Add files from 'webfiles' folder if it exists
+		# Step 7: Add Included Files (All / GX.games) under HTML5 Folder name
+		. (Join-Path $PSScriptRoot "nogx_datafiles.ps1")
+		Add-NOGXDatafilesToZip -Zip $zip
+		
+		# Step 8: Add files from 'webfiles' folder if it exists (overrides conflicts)
 		if (Test-Path -Path $webfilesDir -PathType Container) {
 			Write-Host "[NOGX] Adding 'webfiles' folder content."
 			Push-Location -Path $webfilesDir
@@ -524,7 +528,7 @@ try {
 		
 		Compress-NOGXRunnerWasmInZip -Zip $zip
 		
-		# Step 8: Close and save ZIP archive
+		# Step 9: Close and save ZIP archive
 		$zip.Dispose()
 		
 		Write-Host "[NOGX] Repackaging complete!"

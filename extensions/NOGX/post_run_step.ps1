@@ -197,7 +197,18 @@ try {
 		exit 0
 	}
 	elseif($isOperaGxPlatform) {
-		# Step 3: Copy webfiles folder content if it exists
+		. (Join-Path $PSScriptRoot "nogx_datafiles.ps1")
+		
+		# Step 3: Copy Included Files (All / GX.games) into HTML5 Folder name
+		try {
+			Copy-NOGXDatafilesToDir -OutputDir $outputDir
+		}
+		catch {
+			Write-Error "[NOGX] ERROR: Failed to copy datafiles: $_"
+			exit 1
+		}
+		
+		# Step 4: Copy webfiles folder content if it exists (overrides conflicts)
 		$webfilesDir = [System.IO.Path]::Combine($PSScriptRoot, "..", "..", "webfiles")
 		$webfilesDir = [System.IO.Path]::GetFullPath($webfilesDir)
 		Write-Host "[NOGX] Webfiles dir: $webfilesDir"
