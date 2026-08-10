@@ -18,6 +18,9 @@ This is a special folder in the root directory of your project where you can pla
 The extension will include them in the **GX target** builds.
 You can also use your custom `index.html` file located here, but it should be based on the default `index.html` file from the extension.
 
+On GX builds, Included Files from `datafiles` that are set to export to **All** or **GX.games** are also copied into the HTML5 **Folder name** subfolder (Game Options → HTML5 → Folder name, default `html5game`), preserving the relative path under `datafiles`.  
+`webfiles` are applied **after** that copy, so on path conflicts `webfiles` wins (for example `webfiles/html5game/icon.png` overrides the Included File).
+
 ### 4. send_async_event_social
 The extension adds the ability to send `ev_async_social` from JS to GM for the **GX target**.
 The interface is identical to the one in **HTML5**, namely:
@@ -31,6 +34,29 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 
 > Even if your version of Game Maker has a broken built-in HTML injection mechanism, the extension will still do it.
 
+### 7. Optional `runner.wasm` compression (GX and HTML5)
+When the `Enable code compression` option is **on**, the extension can create a gzip-compressed binary file `runner.wbin` (compression level 7) using **7-Zip** and inject a custom `Module.instantiateWasm` loader into `index.html`.
+The file keeps a `.wbin` extension on purpose: CDN/edge hosts often break `.gz` delivery, so the gzip stream is transported as opaque binary and decompressed manually in the browser.
+
+On browsers with `DecompressionStream` and `WebAssembly.instantiateStreaming`, the loader decompresses and instantiates `runner.wbin` as a stream to minimize peak memory use. If native compressed streaming is unavailable or fails, it loads the original `runner.wasm` directly without a JavaScript decompression step.
+
+The current GameMaker WASM runner requires WebAssembly Exception Handling. Minimum supported browser versions are Chrome and Android System WebView 95, Firefox 100, and Safari/iOS 15.2. Older engines cannot compile `runner.wasm`; this feature cannot be polyfilled by the loader. NOGX detects this before loading the runner and asks the user to update their browser or WebView.
+
+When `Enable code compression` is **off**:
+- `runner.wbin` is not created
+- the wasm loader block is removed from `index.html` during pre-build
+- the game uses the standard GameMaker `runner.wasm` loading path
+
+If 7-Zip is not found or compression fails, the build continues — only a message is written to the log.
+
+**7-Zip search order:**
+1. Extension option `7-Zip Path`
+2. Environment variables: `SEVEN_ZIP`, `7ZIP`, `7Z_HOME`, `7ZIP_HOME`
+3. `C:\Program Files\7-Zip\7z.exe`
+4. `C:\Program Files (x86)\7-Zip\7z.exe`
+
+> For a custom `webfiles/index.html`, keep the `<!-- NOGX_CODE_COMPRESSION_START -->` / `<!-- NOGX_CODE_COMPRESSION_END -->` markers around the compression loader block so the option can enable or remove it automatically.
+
 ## Extension Options
 ![extension options](image_00.png)
 
@@ -39,7 +65,10 @@ The extension implements HTML code injection independently, ignoring Game Maker'
 NOGX_get_canvas_width();
 NOGX_get_canvas_height();
 NOGX_get_pixel_ratio();
+NOGX_is_ready();
 ```
+`NOGX_is_ready()` returns the JS `__NOGX_ready` flag on **GX target** (becomes `true` after extension init). On other targets it returns `false`.
+
 The last function will help you to fix incorrect `device_mouse_x_to_gui` and `device_mouse_y_to_gui` values on **HTML5 target**.  
 Example:
 ```gml

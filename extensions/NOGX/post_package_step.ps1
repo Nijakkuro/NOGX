@@ -130,6 +130,173 @@ function RenameFile-Zip {
 	}
 }
 
+<#
+.SYNOPSIS
+    Resolves path to 7z.exe using extension option, environment variables, and defaults.
+#>
+function Get-NOGXSevenZipPath {
+	$candidates = @()
+	
+	if (-not [string]::IsNullOrWhiteSpace($env:YYEXTOPT_NOGX_SevenZipPath)) {
+		$candidates += $env:YYEXTOPT_NOGX_SevenZipPath
+	}
+	
+	foreach ($envName in @('SEVEN_ZIP', '7ZIP', '7Z_HOME', '7ZIP_HOME')) {
+		$envValue = (Get-Item "env:$envName" -ErrorAction SilentlyContinue).Value
+		if ([string]::IsNullOrWhiteSpace($envValue)) {
+			continue
+		}
+		
+		if ($envName -match 'HOME$' -and -not $envValue.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) {
+			$candidates += [System.IO.Path]::Combine($envValue, "7z.exe")
+		}
+		else {
+			$candidates += $envValue
+		}
+	}
+	
+	$candidates += @(
+		"C:\Program Files\7-Zip\7z.exe",
+		"C:\Program Files (x86)\7-Zip\7z.exe"
+	)
+	
+	foreach ($candidate in $candidates) {
+		if ([string]::IsNullOrWhiteSpace($candidate)) {
+			continue
+		}
+		
+		$resolvedPath = $candidate
+		if (-not [System.IO.Path]::IsPathRooted($resolvedPath)) {
+			$resolvedPath = [System.IO.Path]::GetFullPath($resolvedPath)
+		}
+		
+		if (Test-Path -Path $resolvedPath -PathType Leaf) {
+			Write-Host "[NOGX] Using 7-Zip: '$resolvedPath'"
+			return $resolvedPath
+		}
+	}
+	
+	Write-Host "[NOGX] 7-Zip not found. runner.wbin will not be created."
+	return $null
+}
+
+<#
+.SYNOPSIS
+    Creates runner.wbin (gzip-compressed runner.wasm) in a build output directory.
+#>
+function Compress-NOGXRunnerWasm {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[string]$TargetDir
+	)
+	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping runner.wbin creation."
+		return
+	}
+	
+	$sevenZip = Get-NOGXSevenZipPath
+	if ($null -eq $sevenZip) {
+		return
+	}
+	
+	$wasmFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm")
+	if (-not (Test-Path -Path $wasmFile -PathType Leaf)) {
+		Write-Host "[NOGX] runner.wasm not found in '$TargetDir'. Skipping compressed wasm creation."
+		return
+	}
+	
+	$wbinFile = [System.IO.Path]::Combine($TargetDir, "runner.wbin")
+	$legacyGzFile = [System.IO.Path]::Combine($TargetDir, "runner.wasm.gz")
+	foreach ($oldFile in @($wbinFile, $legacyGzFile)) {
+		if (Test-Path -Path $oldFile -PathType Leaf) {
+			Remove-Item -Path $oldFile -Force -ErrorAction SilentlyContinue
+		}
+	}
+	
+	Write-Host "[NOGX] Creating 'runner.wbin' from 'runner.wasm'"
+	try {
+		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $wbinFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
+		if ($LASTEXITCODE -ne 0) {
+			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wbin (exit code $LASTEXITCODE)."
+			if (Test-Path -Path $wbinFile -PathType Leaf) {
+				Remove-Item -Path $wbinFile -Force -ErrorAction SilentlyContinue
+			}
+			return
+		}
+		
+		Write-Host "[NOGX] Created '$wbinFile'"
+	}
+	catch {
+		Write-Host "[NOGX] WARNING: Failed to create runner.wbin: $_"
+		if (Test-Path -Path $wbinFile -PathType Leaf) {
+			Remove-Item -Path $wbinFile -Force -ErrorAction SilentlyContinue
+		}
+	}
+}
+
+<#
+.SYNOPSIS
+    Creates runner.wbin (gzip-compressed runner.wasm) inside a ZIP archive.
+#>
+function Compress-NOGXRunnerWasmInZip {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[System.IO.Compression.ZipArchive]$Zip
+	)
+	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -ne "True") {
+		Write-Host "[NOGX] Code compression is disabled. Skipping runner.wbin creation."
+		return
+	}
+	
+	$sevenZip = Get-NOGXSevenZipPath
+	if ($null -eq $sevenZip) {
+		return
+	}
+	
+	$wasmEntry = $Zip.GetEntry("runner.wasm")
+	if ($null -eq $wasmEntry) {
+		Write-Host "[NOGX] runner.wasm not found in ZIP. Skipping compressed wasm creation."
+		return
+	}
+	
+	$tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "NOGX_" + [Guid]::NewGuid().ToString())
+	New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+	
+	try {
+		$wasmFile = [System.IO.Path]::Combine($tempDir, "runner.wasm")
+		$wbinFile = [System.IO.Path]::Combine($tempDir, "runner.wbin")
+		
+		[System.IO.Compression.ZipFileExtensions]::ExtractToFile($wasmEntry, $wasmFile, $true)
+		
+		Write-Host "[NOGX] Creating 'runner.wbin' from 'runner.wasm'"
+		& $sevenZip @('a', '-tgzip', '-mx=7', '-y', $wbinFile, $wasmFile) | ForEach-Object { Write-Host "[NOGX] $_" }
+		if ($LASTEXITCODE -ne 0) {
+			Write-Host "[NOGX] WARNING: 7-Zip failed to create runner.wbin (exit code $LASTEXITCODE)."
+			return
+		}
+		
+		if (-not (Test-Path -Path $wbinFile -PathType Leaf)) {
+			Write-Host "[NOGX] WARNING: runner.wbin was not created by 7-Zip."
+			return
+		}
+		
+		RemoveFile-Zip -Zip $Zip -FileName "runner.wbin"
+		RemoveFile-Zip -Zip $Zip -FileName "runner.wasm.gz"
+		Write-Host "[NOGX] Adding 'runner.wbin'"
+		[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Zip, $wbinFile, "runner.wbin") | Out-Null
+	}
+	catch {
+		Write-Host "[NOGX] WARNING: Failed to create runner.wbin in ZIP: $_"
+	}
+	finally {
+		Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+	}
+}
+
 # Main execution block
 $zip = $null
 try {
@@ -163,6 +330,9 @@ try {
 			$indexFile = [System.IO.Path]::Combine($YYtargetFile, $env:YYPLATFORM_option_html5_outputname)
 			Write-Host "[NOGX] Overriding '$indexFile' by '$sourceFile'"
 			Copy-Item -Path $sourceFile -Destination $indexFile -Force -ErrorAction Stop
+			
+			Compress-NOGXRunnerWasm -TargetDir $YYtargetFile
+			
 			Write-Host "[NOGX] Done!"
 			exit 0
 		}
@@ -180,6 +350,8 @@ try {
 			$indexFile = $env:YYPLATFORM_option_html5_outputname
 			Write-Host "[NOGX] Adding new '$indexFile' from '$sourceFile'"
 			[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $sourceFile, $env:YYPLATFORM_option_html5_outputname) | Out-Null
+			
+			Compress-NOGXRunnerWasmInZip -Zip $zip
 			
 			$zip.Dispose()
 			Write-Host "[NOGX] Repackaging complete!"
@@ -310,7 +482,11 @@ try {
 			}
 		}
 		
-		# Step 7: Add files from 'webfiles' folder if it exists
+		# Step 7: Add Included Files (All / GX.games) under HTML5 Folder name
+		. (Join-Path $PSScriptRoot "nogx_datafiles.ps1")
+		Add-NOGXDatafilesToZip -Zip $zip
+		
+		# Step 8: Add files from 'webfiles' folder if it exists (overrides conflicts)
 		if (Test-Path -Path $webfilesDir -PathType Container) {
 			Write-Host "[NOGX] Adding 'webfiles' folder content."
 			Push-Location -Path $webfilesDir
@@ -350,7 +526,9 @@ try {
 		Write-Host "[NOGX] Add processed 'index.html'"
 		[System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $sourceFile, "index.html") | Out-Null
 		
-		# Step 8: Close and save ZIP archive
+		Compress-NOGXRunnerWasmInZip -Zip $zip
+		
+		# Step 9: Close and save ZIP archive
 		$zip.Dispose()
 		
 		Write-Host "[NOGX] Repackaging complete!"

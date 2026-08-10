@@ -394,6 +394,20 @@ function Inject-TextFile {
 				$content = $content.Replace("`${$key}", $value)
 			}
 		}
+
+		# Replace extension option placeholders used directly by index.html.
+		$extensionOptions = (Get-ChildItem Env: | Where-Object Name -like 'YYEXTOPT_*').Name
+		foreach ($optionName in $extensionOptions) {
+			try {
+				$optionValue = (Get-Item "env:$optionName").Value
+				if ($null -ne $optionValue) {
+					$content = $content.Replace("`${$optionName}", $optionValue)
+				}
+			}
+			catch {
+				Write-Warning "[NOGX] Failed to inject extension option '$optionName': $_"
+			}
+		}
 		
 		# Write the processed content to output file
 		$content | Out-File -FilePath $outputFilename -Encoding utf8 -ErrorAction Stop
@@ -402,6 +416,33 @@ function Inject-TextFile {
 		Write-Error "[NOGX] Inject-TextFile failed: $_"
 		throw
 	}
+}
+
+<#
+.SYNOPSIS
+    Includes or removes wasm compression loader scripts based on EnableCodeCompression.
+#>
+function Apply-NOGXCodeCompressionScripts {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[string]$Content
+	)
+	
+	$blockPattern = '(?s)\t<!-- NOGX_CODE_COMPRESSION_START -->.*?<!-- NOGX_CODE_COMPRESSION_END -->\r?\n?'
+	
+	if ($env:YYEXTOPT_NOGX_EnableCodeCompression -eq "True") {
+		if ($Content -notmatch '<!-- NOGX_CODE_COMPRESSION_START -->') {
+			return $Content
+		}
+		
+		return $Content `
+			-replace '\r?\n\t<!-- NOGX_CODE_COMPRESSION_START -->\r?\n', "`r`n" `
+			-replace '\r?\n\t<!-- NOGX_CODE_COMPRESSION_END -->', ''
+	}
+	
+	Write-Host "[NOGX] Code compression disabled. Removing wasm loader from index.html."
+	return $Content -replace $blockPattern, ''
 }
 
 # Main execution block
@@ -475,6 +516,10 @@ try {
 	Write-Host "[NOGX] Injecting into 'index.html' ('$sourceFile' -> '$outputFilename')"
 	
 	Inject-TextFile -inputFilename $sourceFile -outputFilename $outputFilename -injections $injections
+	
+	$content = Get-Content -Raw -Path $outputFilename -Encoding utf8 -ErrorAction Stop
+	$content = Apply-NOGXCodeCompressionScripts -Content $content
+	$content | Out-File -FilePath $outputFilename -Encoding utf8 -ErrorAction Stop
 
 	Write-Host "[NOGX] The injection is complete. The resulting file is in '$outputFilename'"
 	exit 0
