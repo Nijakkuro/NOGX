@@ -14,7 +14,7 @@
   "copyToTargets":3035426178912485614,
   "description":"",
   "exportToGame":true,
-  "extensionVersion":"1.1.6",
+  "extensionVersion":"1.1.7",
   "files":[
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"index.html","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
     {"$GMExtensionFile":"v1","%Name":"","constants":[],"copyToTargets":0,"filename":"pre_build_step.bat","final":"","functions":[],"init":"","kind":4,"name":"","origname":"","ProxyFiles":[],"resourceType":"GMExtensionFile","resourceVersion":"2.0","uncompress":false,"usesRunnerInterface":false,},
@@ -72,6 +72,7 @@
     {"$GMExtensionOption":"","%Name":"__extOptLabel1","defaultValue":"GX Export Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"99226052-fddb-44f3-8a90-99fa831ff7e4","hidden":false,"listItems":[],"name":"__extOptLabel1","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"YaFix","defaultValue":"True","description":"Adds changes to resolve a JavaScript variable conflicts on some web platforms.","displayName":"\"Ya\" Fix","exportToINI":false,"extensionId":null,"guid":"a9ba5dbf-b0fa-4ba1-adad-c74e23460d27","hidden":false,"listItems":[],"name":"YaFix","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"ReplaceAlertOnError","defaultValue":"True","description":"","displayName":"Replace Alert On Error","exportToINI":false,"extensionId":null,"guid":"6b338481-49be-4e15-9ff3-835ce098ab8d","hidden":false,"listItems":[],"name":"ReplaceAlertOnError","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
+    {"$GMExtensionOption":"","%Name":"ExcludeRunnerData","defaultValue":"True","description":"","displayName":"Exclude runner.data","exportToINI":false,"extensionId":null,"guid":"3bf224f6-4bf2-4410-950a-6a2a6607ed66","hidden":false,"listItems":[],"name":"ExcludeRunnerData","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"__extOptLabel2","defaultValue":"HTML5 Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"8a20a7e7-b353-4785-94fe-084e8c78fa3d","hidden":false,"listItems":[],"name":"__extOptLabel2","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"EnableInjectionsForHTML5","defaultValue":"False","description":"The extension will handle HTML injections by it's own. This is useful on runtimes where built-in injections mechanism is broken.","displayName":"Process HTML Injections","exportToINI":false,"extensionId":null,"guid":"fc5f19d9-1981-49f9-9ae1-89d361e98213","hidden":false,"listItems":[],"name":"EnableInjectionsForHTML5","optType":0,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},
     {"$GMExtensionOption":"","%Name":"__extOptLabel","defaultValue":"Display Settings","description":"","displayName":"","exportToINI":false,"extensionId":null,"guid":"ba7bcfc3-fd11-48f0-9039-b2a1b9fe559d","hidden":false,"listItems":[],"name":"__extOptLabel","optType":5,"resourceType":"GMExtensionOption","resourceVersion":"2.0",},

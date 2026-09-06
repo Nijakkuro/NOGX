@@ -11,6 +11,7 @@ $YYtempFolder = $env:YYtempFolder
 $YYEXTOPT_NOGX_Enable = $env:YYEXTOPT_NOGX_Enable
 $YYEXTOPT_NOGX_YaFix = $env:YYEXTOPT_NOGX_YaFix
 $YYEXTOPT_NOGX_ReplaceAlertOnError = $env:YYEXTOPT_NOGX_ReplaceAlertOnError
+$YYEXTOPT_NOGX_ExcludeRunnerData = $env:YYEXTOPT_NOGX_ExcludeRunnerData
 
 Write-Host "[NOGX] post_package_step"
 
@@ -297,6 +298,42 @@ function Compress-NOGXRunnerWasmInZip {
 	}
 }
 
+<#
+.SYNOPSIS
+    Removes substring between markers.
+#>
+function Remove-BetweenMarkers {
+	[CmdletBinding()]
+	param (
+		[Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+		[string]$Text,
+
+		[Parameter(Mandatory = $true)]
+		[string]$StartMarker,
+
+		[Parameter(Mandatory = $true)]
+		[string]$EndMarker
+	)
+	
+	try {
+		$idxA = $Text.IndexOf($StartMarker)
+		if ($idxA -lt 0) {
+			return $Text
+		}
+
+		$idxB = $Text.IndexOf($EndMarker, $idxA + $StartMarker.Length)
+		if ($idxB -lt 0) {
+			return $Text
+		}
+
+		$part1 = $Text.Substring(0, $idxA)
+		$part2 = $Text.Substring($idxB)
+		return $part1 + $part2
+	} catch {
+		Write-Error "[NOGX] Failed Remove-BetweenMarkers: $_"
+	}
+}
+
 # Main execution block
 $zip = $null
 try {
@@ -379,6 +416,10 @@ try {
 		# Step 4: Remove extra files from ZIP archive
 		RemoveFile-Zip -Zip $zip -FileName "index.html"
 		
+		if ($YYEXTOPT_NOGX_ExcludeRunnerData -eq "True") {
+			RemoveFile-Zip -Zip $zip -FileName "runner.data"
+		}
+		
 		# Step 5: Process files based on runtime target
 		if ($YYTARGET_runtime -ieq "YYC") {
 			# YYC (YoYo Compiler) runtime: remove unnecessary files and rename JS file
@@ -458,6 +499,12 @@ try {
 					'k.setStatus&&k.setStatus("Downloading data...")',
 					'0'
 				)
+				
+				# Remove runner.data related code
+				if ($YYEXTOPT_NOGX_ExcludeRunnerData -eq "True") {
+					Write-Host "[NOGX] Remove 'runner.data' related code"
+					$updatedContent = Remove-BetweenMarkers -Text $updatedContent -StartMarker "k.lk||(k.lk=0);k.lk++;" -EndMarker "this.doGMLCallback=function"
+				}
 				
 				# Write updated content to temporary file and add to ZIP
 				$tempFile = [System.IO.Path]::GetTempFileName()
