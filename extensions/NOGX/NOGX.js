@@ -204,3 +204,10 @@ function __NOGX_stretch_canvas_ext(canvas_id, w, h) {
 function __NOGX_scrollbars_enable(z) {
 	document.body.style.overflow = z ? "" : "hidden";
 }
+
+function __NOGX_get_base_url() {
+	const pathname = document.location.pathname;
+	const path = pathname.substring(0, pathname.lastIndexOf('/'));
+	return document.location.origin + path;
+}
+

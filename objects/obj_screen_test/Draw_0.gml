@@ -35,3 +35,5 @@ draw_text(16, 156, $"Pixel Ratio = {pr}");
 
 draw_text(16, 186, $"Use the NOGX_get_canvas_width() and NOGX_get_canvas_height() functions\nto get the actual canvas size in pixels");
 
+draw_text(16, 256, $"text file content = {text_file_content}");
+

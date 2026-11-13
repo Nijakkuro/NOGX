@@ -188,3 +188,7 @@ _NOGX_stretch_canvas_ext(window_handle(), argument0, argument1);
 
 #define NOGX_scrollbars_enable
 _NOGX_scrollbars_enable(argument0);
+
+#define NOGX_get_base_url
+return _NOGX_get_base_url();
+
